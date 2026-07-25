@@ -1,0 +1,165 @@
+---
+title: "Troubleshoot Common E-Receipt Issues"
+sidebarTitle: "Troubleshooting"
+description: "Diagnose and fix the most common issues in E-Receipt: delivery failures, authentication errors, template rendering problems, and integration issues."
+---
+
+Most issues you encounter with E-Receipt fall into one of a few categories: a receipt that did not reach a customer, an authentication error blocking your API requests, a template that is not rendering as expected, or an integration that has stopped triggering. This guide walks you through diagnosing and resolving each category step by step.
+
+## Receipt not delivered
+
+If a customer reports not receiving a receipt, start by checking the delivery status of that specific receipt.
+
+<Steps>
+  <Step title="Check the delivery status">
+    Make a `GET` request to retrieve the receipt and inspect its `delivery_status` field:
+
+    ```bash
+    curl https://api.e-receipt.com/v1/receipts/{id} \
+      -H "Authorization: Bearer YOUR_API_KEY"
+    ```
+
+    A `delivery_status` of `failed` confirms the receipt was not delivered. A status of `pending` means delivery is still in progress; wait a few minutes and check again.
+  </Step>
+  <Step title="Identify the cause">
+    The receipt object includes a `delivery_error` field that describes why delivery failed. Use the table below to match the error to a fix:
+
+    | Cause | Symptoms | Fix |
+    |-------|----------|-----|
+    | **Invalid email address** | `delivery_error: invalid_email` | Correct the email address in your customer records and resend. |
+    | **Inbox spam filter** | `delivery_status: delivered` but customer did not receive it | Ask the customer to check their spam or junk folder and mark the receipt as not spam. Consider setting up a [custom sending domain](/configuration/account-settings#business-profile) to improve deliverability. |
+    | **SMS opt-out** | `delivery_error: sms_opted_out` | The customer's phone number is on the SMS suppression list. Contact the customer through another channel. |
+    | **Invalid phone number** | `delivery_error: invalid_phone` | Verify the phone number is in E.164 format (for example, `+14155552671`) and resend. |
+  </Step>
+  <Step title="Correct and resend">
+    Update the customer's contact information in your system, then resend the receipt:
+
+    ```bash
+    curl -X POST https://api.e-receipt.com/v1/receipts/{id}/resend \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"email": "corrected@example.com"}'
+    ```
+  </Step>
+</Steps>
+
+## Authentication errors
+
+Authentication errors prevent any API request from succeeding. They are always returned as `4xx` HTTP status codes.
+
+### 401 Unauthorized
+
+A `401` response means your API key is missing, malformed, or invalid.
+
+**Check the following:**
+
+- Confirm your request includes an `Authorization` header with the `Bearer` scheme:
+
+  ```http
+  Authorization: Bearer sk_live_YOUR_API_KEY
+  ```
+
+- Verify the key is correct by copying it again from **Settings > API Keys**. Note that keys beginning with `sk_test_` only work against the sandbox environment; use `sk_live_` keys for production.
+
+- Ensure no extra whitespace or line breaks have been introduced when storing or interpolating the key.
+
+### 403 Forbidden
+
+A `403` response means your API key is valid but does not have permission to perform the requested action.
+
+Check the scope assigned to the key in **Settings > API Keys**. If the key was created with read-only access, it cannot be used to create or update resources. Create a new key with the appropriate permissions or update the existing key's scope.
+
+### Correct authorization header example
+
+```bash
+curl https://api.e-receipt.com/v1/receipts \
+  -H "Authorization: Bearer sk_live_abc123xyz" \
+  -H "Content-Type: application/json"
+```
+
+## Template rendering issues
+
+### Receipt shows raw `{{variable}}` placeholders
+
+If a customer receives a receipt with literal text like `{{customer.name}}` instead of their actual name, the variable was not resolved at send time.
+
+**Likely causes and fixes:**
+
+- **Misspelled variable name** — check the variable name against the full list in the [Templates documentation](/configuration/templates#template-variables). Variable names are case-sensitive; `{{Customer.name}}` will not resolve but `{{customer.name}}` will.
+- **Missing data in the API request** — the variable can only be resolved if the corresponding field was included in the receipt payload. For example, `{{customer.name}}` requires a `name` field inside the `customer` object of the request body.
+- **Metadata key mismatch** — for `{{metadata.*}}` variables, ensure the key in the template exactly matches the key sent in the `metadata` object of the API request.
+
+### Logo not appearing in the receipt
+
+If the receipt renders without a logo:
+
+- Confirm a logo has been uploaded in **Settings > Branding > Logo**. If no logo has been uploaded, the logo placeholder is hidden automatically.
+- Check that the uploaded file meets the format and dimension requirements: PNG, SVG, or JPG at a recommended **400 × 200 px**. Unusually large files may be rejected.
+- If you uploaded a logo recently, send a new test receipt — receipts already in flight at the time of the upload use the previous state.
+
+## Integration not triggering
+
+### POS integration
+
+If receipts are not being triggered by your point-of-sale system:
+
+1. Navigate to **Integrations > POS** and confirm the integration status shows **Active**.
+2. Verify that the **location mapping** is correctly configured — each POS terminal or register must be mapped to the correct E-Receipt merchant location. An unmapped terminal will silently drop receipt events.
+3. Check the integration event log (visible in **Integrations > POS > Logs**) for errors from recent transactions.
+
+### Shopify integration
+
+If receipts are not sending after Shopify orders:
+
+1. In your Shopify admin, navigate to **Apps** and confirm the E-Receipt app is installed and **not paused**.
+2. Check that the trigger is set to fire on the correct order event (for example, `Order paid` rather than `Order created`).
+3. Review the event log in **Integrations > Shopify > Logs** for any payload errors.
+
+### Webhook endpoint not receiving events
+
+If your webhook endpoint is not receiving events:
+
+- Confirm the endpoint URL uses **HTTPS**. E-Receipt does not deliver events to plain HTTP endpoints.
+- Verify your server returns a **`200 OK`** response within 10 seconds of receiving the event. Any other response code (including `301` redirects) is treated as a failure and the event is retried.
+- Check the webhook delivery log in **Settings > Webhooks > Logs** to see recent delivery attempts and their response codes.
+
+## Rate limiting
+
+If your integration is making requests faster than the API allows, you will receive a `429 Too Many Requests` response.
+
+E-Receipt enforces a limit of **100 requests per minute** per API key. The response includes `Retry-After` and `X-RateLimit-Reset` headers indicating when the limit resets.
+
+**Fix:** implement **exponential backoff** in your integration — when you receive a `429`, wait before retrying, and increase the wait time with each subsequent retry. A simple starting pattern:
+
+```python
+import time
+
+def send_with_backoff(request_fn, max_retries=5):
+    delay = 1  # seconds
+    for attempt in range(max_retries):
+        response = request_fn()
+        if response.status_code != 429:
+            return response
+        time.sleep(delay)
+        delay *= 2  # double the delay each retry
+    raise Exception("Max retries exceeded")
+```
+
+For full details on error codes and retry guidance, see [Errors](/api-reference/errors).
+
+## Contacting support
+
+If you have worked through the steps above and still cannot resolve your issue, the E-Receipt support team is here to help.
+
+<CardGroup cols={2}>
+  <Card title="Email support" icon="envelope">
+    Send a detailed message to **support@e-receipt.com**. Include your **account ID**, the **receipt ID** (if the issue is receipt-specific), the full **error message** or response body, and any steps you have already taken.
+  </Card>
+  <Card title="Dashboard chat" icon="message">
+    Click the **chat widget** in the bottom-right corner of any page in your E-Receipt dashboard for real-time support during business hours.
+  </Card>
+</CardGroup>
+
+<Info>
+  Check the E-Receipt status page at **[status.e-receipt.com](https://status.e-receipt.com)** before contacting support. If there is an active incident or ongoing maintenance affecting deliveries or the API, it will be reported there along with live updates and estimated resolution times.
+</Info>

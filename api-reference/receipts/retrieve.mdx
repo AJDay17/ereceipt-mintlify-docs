@@ -1,0 +1,157 @@
+---
+title: "GET /receipts/:id — Retrieve a Receipt"
+sidebarTitle: "Retrieve Receipt"
+description: "GET /v1/receipts/:id — Retrieves a single receipt by ID, including its delivery status, line items, and customer details."
+---
+
+Retrieve the full current state of any receipt using its unique ID. The response includes the complete line item breakdown, all monetary totals, and detailed delivery tracking — including when the receipt was sent, delivered, and first viewed by the customer. Use this endpoint to power receipt detail views, audit trails, or delivery status checks.
+
+## Endpoint
+
+```
+GET https://api.e-receipt.com/v1/receipts/{id}
+```
+
+## Path parameter
+
+<ParamField path="id" type="string" required>
+  The unique ID of the receipt to retrieve. Receipt IDs are prefixed with `rec_` (e.g., `rec_7Xk3nPwQvY`).
+</ParamField>
+
+## Example request
+
+```bash cURL
+curl https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+A successful request returns HTTP `200 OK` with the full receipt object.
+
+```json
+{
+  "id": "rec_7Xk3nPwQvY",
+  "status": "viewed",
+  "customer_id": "cus_9KJ2mXpLqR",
+  "currency": "USD",
+  "items": [
+    {
+      "name": "Blue Widget",
+      "quantity": 2,
+      "unit_price": 14.99,
+      "total": 29.98
+    },
+    {
+      "name": "Shipping",
+      "quantity": 1,
+      "unit_price": 5.00,
+      "total": 5.00
+    }
+  ],
+  "subtotal": 34.98,
+  "tax": 2.80,
+  "discount": 5.00,
+  "total": 32.78,
+  "template_id": "tmpl_default_light",
+  "notes": "Thank you for your purchase! Returns accepted within 30 days.",
+  "metadata": {
+    "order_id": "ORD-00421",
+    "store_code": "NYC-01"
+  },
+  "delivery_status": "viewed",
+  "sent_at": "2025-03-15T14:00:05Z",
+  "delivered_at": "2025-03-15T14:00:12Z",
+  "first_viewed_at": "2025-03-15T14:22:47Z",
+  "view_count": 3,
+  "created_at": "2025-03-15T13:45:22Z",
+  "updated_at": "2025-03-15T14:22:47Z"
+}
+```
+
+## Response fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the receipt, prefixed with `rec_`.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  High-level lifecycle status of the receipt. Mirrors `delivery_status` once the receipt has been sent.
+</ResponseField>
+
+<ResponseField name="customer_id" type="string">
+  ID of the customer this receipt belongs to.
+</ResponseField>
+
+<ResponseField name="currency" type="string">
+  ISO 4217 currency code used for all monetary values on this receipt.
+</ResponseField>
+
+<ResponseField name="items" type="array">
+  Array of line item objects included on this receipt. Each item contains `name`, `quantity`, `unit_price`, and `total`.
+</ResponseField>
+
+<ResponseField name="subtotal" type="number">
+  Sum of all line item totals before tax and discount.
+</ResponseField>
+
+<ResponseField name="tax" type="number">
+  Tax amount applied to this receipt.
+</ResponseField>
+
+<ResponseField name="discount" type="number">
+  Discount amount deducted from this receipt.
+</ResponseField>
+
+<ResponseField name="total" type="number">
+  Final total charged to the customer.
+</ResponseField>
+
+<ResponseField name="template_id" type="string">
+  ID of the template used to render this receipt.
+</ResponseField>
+
+<ResponseField name="notes" type="string">
+  Custom message displayed at the bottom of the receipt.
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Your key-value pairs attached to this receipt for internal reference.
+</ResponseField>
+
+<ResponseField name="delivery_status" type="string">
+  Granular delivery tracking status. Possible values:
+
+  | Value | Description |
+  |-------|-------------|
+  | `draft` | Receipt created but not yet sent. |
+  | `queued` | Send request accepted and queued for delivery. |
+  | `sent` | Receipt dispatched to the delivery provider. |
+  | `delivered` | Confirmed delivery to the customer's inbox or phone. |
+  | `viewed` | Customer has opened the receipt at least once. |
+  | `failed` | Delivery failed. Check the customer's contact details and retry. |
+</ResponseField>
+
+<ResponseField name="sent_at" type="string">
+  ISO 8601 timestamp of when the receipt was dispatched. `null` if not yet sent.
+</ResponseField>
+
+<ResponseField name="delivered_at" type="string">
+  ISO 8601 timestamp of confirmed delivery. `null` if delivery has not yet been confirmed.
+</ResponseField>
+
+<ResponseField name="first_viewed_at" type="string">
+  ISO 8601 timestamp of when the customer first opened the receipt. `null` if not yet viewed.
+</ResponseField>
+
+<ResponseField name="view_count" type="integer">
+  Total number of times the customer has opened the receipt. `0` if never viewed.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when this receipt was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update to this receipt.
+</ResponseField>

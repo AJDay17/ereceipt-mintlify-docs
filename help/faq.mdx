@@ -1,0 +1,117 @@
+---
+title: "E-Receipt Frequently Asked Questions"
+sidebarTitle: "FAQ"
+description: "Answers to the most common questions about E-Receipt, including account setup, pricing, delivery, compliance, and integrations."
+---
+
+Whether you are just getting started or scaling up your receipt operations, you are likely to have questions along the way. Below you will find answers to the most common questions our customers ask about account setup, delivery channels, compliance, and more. If you do not find what you are looking for here, reach out to the support team via the chat widget in your dashboard.
+
+<AccordionGroup>
+  <Accordion title="How do I get started?">
+    Getting your first receipt out the door takes just a few minutes:
+
+    <Steps>
+      <Step title="Create your account">
+        Sign up at [e-receipt.com](https://e-receipt.com) and verify your email address. Your account is created with a free sandbox environment so you can test without affecting real customers.
+      </Step>
+      <Step title="Generate an API key">
+        Navigate to **Settings > API Keys**, click **New API Key**, give it a name (for example, `Production`), and copy the key immediately — it is only shown once.
+      </Step>
+      <Step title="Send your first receipt">
+        Make a `POST /v1/receipts` request with your API key in the `Authorization` header, including at least a customer email address and one line item. E-Receipt delivers the receipt and returns a `receipt_id` you can use to track delivery.
+      </Step>
+    </Steps>
+
+    For a guided walkthrough, see the [Quickstart](/quickstart) guide.
+  </Accordion>
+
+  <Accordion title="What delivery channels does E-Receipt support?">
+    E-Receipt delivers receipts via two channels:
+
+    - **Email** — a fully branded HTML receipt is sent to the customer's email address. Email receipts support logos, colors, itemized tables, QR codes, and clickable links.
+    - **SMS** — a short text message containing a link to a hosted receipt page is sent to the customer's mobile number. SMS messages are limited to **160 characters** for standard GSM encoding; messages containing special characters (emoji, accented letters outside the GSM-7 character set) use Unicode encoding and are limited to **70 characters** per segment, which may result in multi-part messages and additional carrier charges.
+
+    You can send to both channels simultaneously by providing both `email` and `phone` in the customer object of your API request.
+  </Accordion>
+
+  <Accordion title="Can I use my own domain for email sending?">
+    Yes. By default, receipts are sent from an E-Receipt shared sending domain. To send from your own domain (for example, `receipts@yourbusiness.com`), add a custom sending domain:
+
+    <Steps>
+      <Step title="Add your domain">
+        Navigate to **Settings > Email > Custom Sending Domain** and enter the domain you want to send from.
+      </Step>
+      <Step title="Verify ownership">
+        E-Receipt provides DNS records (SPF, DKIM, and DMARC entries) that you add to your domain's DNS configuration through your registrar or DNS provider.
+      </Step>
+      <Step title="Confirm verification">
+        Click **Verify** once the DNS records have propagated (typically within a few hours). E-Receipt checks the records and marks the domain as verified.
+      </Step>
+    </Steps>
+
+    Sending from your own domain improves deliverability and brand recognition in your customers' inboxes.
+  </Accordion>
+
+  <Accordion title="How do I add my logo to receipts?">
+    Upload your logo by navigating to **Settings > Branding > Logo**, clicking **Upload Logo**, and selecting a PNG, SVG, or JPG file. For best results, use a **400 × 200 px** image with a transparent background.
+
+    You can also upload a separate dark-mode variant so your logo remains crisp for customers using dark-mode email clients. For full details, see the [Branding](/configuration/branding) guide.
+  </Accordion>
+
+  <Accordion title="Is there a free trial?">
+    Yes. Every new E-Receipt account includes a **free tier** that lets you send up to **100 receipts per month** at no cost — no credit card required. The free tier is a great way to integrate E-Receipt, test your templates, and validate your setup before going live.
+
+    When you are ready to scale, upgrade to a paid plan from **Settings > Billing**. Paid plans start with higher monthly receipt volumes, SMS delivery, custom sending domains, and priority support. You can also start a **14-day free trial** of any paid plan to explore premium features before committing.
+  </Accordion>
+
+  <Accordion title="What happens if a receipt fails to deliver?">
+    E-Receipt handles delivery failures automatically:
+
+    1. **Automatic retries** — if a receipt fails to deliver (for example, due to a temporary server error or network issue), E-Receipt retries delivery up to **three times** with increasing delays between attempts.
+    2. **Failure notification** — if all retry attempts fail, the receipt's `delivery_status` is set to `failed` and a failure alert is sent to any team members configured to receive them under **Settings > Notifications**.
+    3. **Manual resend** — once you have corrected the underlying issue (for example, updating an invalid email address), you can resend the receipt from the dashboard by clicking **Resend** on the receipt detail page, or via the API using `POST /v1/receipts/{id}/resend`.
+
+    You can check the delivery status of any receipt at any time using `GET /v1/receipts/{id}` and inspecting the `delivery_status` field.
+  </Accordion>
+
+  <Accordion title="Can customers opt out of digital receipts?">
+    Yes, and E-Receipt makes honoring opt-outs automatic:
+
+    - **Email** — every receipt email includes a mandatory **Unsubscribe** link in the footer. When a customer clicks it, their email address is added to your suppression list and no further receipt emails are sent to that address.
+    - **SMS** — customers can reply **STOP** to any SMS receipt message. Their number is immediately added to your SMS suppression list in compliance with carrier requirements.
+
+    Suppression lists are managed automatically by E-Receipt. You can view and manage them under **Settings > Suppressions**, and you can manually add an address or number if a customer contacts you directly to opt out.
+  </Accordion>
+
+  <Accordion title="Does E-Receipt support multiple locations?">
+    Yes. If your business operates multiple locations (stores, branches, or franchises), each location is configured as a separate **merchant entity** within your account. Each merchant entity can have its own name, address, and location-specific branding while still being managed from a single E-Receipt account.
+
+    To add a location, navigate to **Settings > Locations > Add Location** and fill in the location details. When issuing a receipt, pass the `merchant_id` of the relevant location in your API request to ensure the correct details appear on the receipt.
+  </Accordion>
+
+  <Accordion title="How do I cancel my account?">
+    You can cancel your subscription at any time without contacting support:
+
+    <Steps>
+      <Step title="Open Billing settings">
+        Navigate to **Settings > Billing**.
+      </Step>
+      <Step title="Cancel your subscription">
+        Click **Cancel Subscription** and follow the on-screen confirmation steps.
+      </Step>
+    </Steps>
+
+    Your account remains active and fully functional until the end of the current paid billing period. After that, your account moves to an inactive state and no further receipts can be sent. Your data — including receipt history, templates, and customer records — is **retained for 30 days** after cancellation, during which you can export it or reactivate your account. After 30 days, all data is permanently deleted.
+  </Accordion>
+
+  <Accordion title="Is E-Receipt GDPR compliant?">
+    Yes. E-Receipt is designed with data protection compliance in mind:
+
+    - **Data retention controls** — configure how long customer data and receipt records are retained under **Settings > Data & Privacy**. Set automatic deletion schedules that align with your retention policy.
+    - **Customer data deletion** — delete a specific customer's personal data at any time via the dashboard or the `DELETE /v1/customers/{id}` API endpoint, fulfilling right-to-erasure requests under GDPR Article 17.
+    - **EU data residency** — if your customers are primarily in the European Union, you can opt in to EU data residency to ensure all customer data is stored and processed within the EU. Contact support to enable this for your account.
+    - **Data processing agreement (DPA)** — a standard DPA is available for all paid plan customers. Download it from **Settings > Data & Privacy > Data Processing Agreement** or contact support to request a countersigned copy.
+
+    For a full overview of E-Receipt's privacy and compliance practices, visit our [Privacy Policy](https://e-receipt.com/privacy) and [Security page](https://e-receipt.com/security).
+  </Accordion>
+</AccordionGroup>

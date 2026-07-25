@@ -1,0 +1,60 @@
+---
+title: "E-Receipt Core Concepts and Key Terminology"
+sidebarTitle: "Concepts"
+description: "Understand the key objects and workflows in E-Receipt: receipts, customers, templates, merchants, and delivery channels."
+---
+
+E-Receipt is built around a small set of core objects that work together to move a transaction from your system to your customer's inbox or phone. Understanding these objects — and how they relate to one another — will help you integrate the API faster, design your data model effectively, and debug issues when they arise. Every API call you make either creates, reads, updates, or connects one of these objects.
+
+## Receipt
+
+The receipt is the primary object in E-Receipt. It represents a single transaction and contains everything a customer needs to understand what they purchased: your merchant information, an ordered list of line items, subtotals, tax, discounts, and the grand total. You can also attach free-form metadata to a receipt for your own internal reference (for example, an order ID from your own system).
+
+Every receipt moves through a defined lifecycle captured in its `status` field:
+
+| Status | Meaning |
+|---|---|
+| `draft` | The receipt has been created but not yet sent. You can still edit it. |
+| `sent` | The receipt has been dispatched to the delivery channel and is on its way to the customer. |
+| `viewed` | The customer has opened the receipt link. |
+| `failed` | Delivery was attempted but failed — for example, due to an invalid email address. |
+
+A receipt is always linked to exactly one **Customer** and one **Merchant**, and it is rendered using a **Template**.
+
+## Customer
+
+A customer is a person who receives receipts from you. Each customer record stores at minimum a name and at least one contact method — an email address, a phone number, or both. E-Receipt maintains a purchase history for each customer, so you can look up all receipts sent to a given individual at any time.
+
+When you create a customer via `POST /v1/customers`, E-Receipt assigns them a unique `customer_id`. You reference this ID whenever you create a receipt, so you never need to re-enter the customer's contact details. Customers can also manage their own delivery preferences — for example, switching from email to SMS — through the hosted customer portal.
+
+## Merchant
+
+Your merchant record represents your business within E-Receipt. It holds your business name, logo, brand colors, default currency, and timezone. These settings are automatically applied to every receipt you create, so your branding is always consistent without any extra work per transaction.
+
+You can have more than one merchant account — useful if you operate multiple brands or locations — and each merchant has its own set of API keys, templates, and customer records. Your merchant ID (`merchant_id`) is required on every receipt creation request.
+
+## Template
+
+A template defines the visual layout of your receipts. It controls which sections appear (for example, a loyalty points block or a return policy footer), how your logo and colors are applied, and what custom copy is shown in the header and footer. Every merchant has a default template that is applied automatically, but you can create multiple templates for different receipt types (for example, a standard purchase receipt versus a refund receipt) and specify which to use per request.
+
+Templates are linked to a single merchant and can be managed from **Settings > Templates** in the dashboard or via the `/v1/templates` API endpoints. When you update a template, all future receipts use the new design immediately — previously sent receipts are not affected.
+
+## Delivery Channel
+
+A delivery channel is the method by which a receipt reaches a customer: **email** or **SMS**. The channel is configured either on the customer record (as their preferred default) or explicitly on each `/send` request, letting you override the default when needed.
+
+Email delivery produces a fully rendered HTML receipt and supports open tracking. SMS delivery sends a short message containing a link to a hosted receipt page, making it ideal for customers who prefer not to share an email address. Both channels provide delivery status updates via webhooks.
+
+## Webhook
+
+A webhook is an HTTP callback that E-Receipt sends to a URL you configure whenever a receipt's status changes. For example, you can register a webhook to be notified the moment a receipt is delivered (`receipt.sent`) or when a customer views it (`receipt.viewed`). This lets you build real-time workflows without polling the API — for instance, triggering a loyalty points award as soon as a customer views their receipt.
+
+You configure webhook endpoints from **Settings > Webhooks** in the dashboard or via `POST /v1/webhooks`. Every webhook payload is signed with a secret so you can verify it came from E-Receipt.
+
+## How the objects fit together
+
+When you create a receipt, E-Receipt links it to a Customer and applies your Template, then delivers it via the configured channel. In practical terms: your `POST /v1/receipts` request provides the `merchant_id`, `customer_id`, and line items; E-Receipt resolves your merchant's default (or specified) template; and your subsequent `POST /v1/receipts/{id}/send` call dispatches it through the customer's preferred or specified delivery channel. Webhooks fire at each status transition so your system stays in sync.
+
+<Info>
+  The receipt lifecycle always flows in one direction: `draft` → `sent` → `viewed` (or `failed`). You can edit a receipt while it is in `draft` status, but once you call `/send` the receipt is locked and a new version must be created if changes are needed. If a receipt reaches `failed` status, you can retry delivery by calling `/send` again after correcting the underlying issue (for example, updating the customer's email address).
+</Info>

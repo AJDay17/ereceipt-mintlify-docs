@@ -1,0 +1,94 @@
+---
+title: "GET /customers/:id — Retrieve a Customer Profile"
+sidebarTitle: "Retrieve Customer"
+description: "GET /v1/customers/:id — Returns a single customer profile by ID, including contact details and delivery preferences."
+---
+
+Look up any customer by their E-Receipt ID to verify their contact details, check opt-in status, and confirm their preferred delivery channel. This is useful before sending a receipt when you want to confirm the customer has a valid email or phone on record.
+
+## Endpoint
+
+```
+GET https://api.e-receipt.com/v1/customers/{id}
+```
+
+## Path parameter
+
+<ParamField path="id" type="string" required>
+  The unique ID of the customer to retrieve. Customer IDs are prefixed with `cus_` (e.g., `cus_9KJ2mXpLqR`).
+</ParamField>
+
+## Example request
+
+```bash cURL
+curl https://api.e-receipt.com/v1/customers/cus_9KJ2mXpLqR \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+A successful request returns HTTP `200 OK` with the full customer profile.
+
+```json
+{
+  "id": "cus_9KJ2mXpLqR",
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "phone": "+15551234567",
+  "preferred_channel": "email",
+  "email_opted_in": true,
+  "sms_opted_in": true,
+  "metadata": {
+    "crm_id": "CRM-98312",
+    "loyalty_tier": "gold"
+  },
+  "created_at": "2025-03-15T09:30:00Z",
+  "updated_at": "2025-03-15T09:30:00Z"
+}
+```
+
+## Response fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the customer, prefixed with `cus_`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The customer's full name as stored in E-Receipt.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The customer's email address. `null` if not provided.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  The customer's phone number in E.164 format. `null` if not provided.
+</ResponseField>
+
+<ResponseField name="preferred_channel" type="string">
+  The default delivery channel for this customer — either `"email"` or `"sms"`.
+</ResponseField>
+
+<ResponseField name="email_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by email. Defaults to `true` when an email address is provided.
+</ResponseField>
+
+<ResponseField name="sms_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by SMS. Defaults to `true` when a phone number is provided.
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Your key-value pairs attached to this customer profile for internal reference.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when this customer profile was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update to this customer profile.
+</ResponseField>
+
+<Note>
+  If you don't have the customer's E-Receipt ID on hand, you can look them up by email address using the list endpoint: `GET /v1/customers?email=jane.smith@example.com`. This returns a paginated list filtered to that exact address.
+</Note>

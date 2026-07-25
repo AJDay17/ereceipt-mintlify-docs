@@ -1,0 +1,157 @@
+---
+title: "E-Receipt Webhooks API: Register and Manage Endpoints"
+sidebarTitle: "Webhooks API"
+description: "Use the E-Receipt Webhooks API to register, list, and manage webhook endpoints programmatically. Receive real-time event notifications."
+---
+
+Webhooks let your server receive real-time HTTP notifications whenever E-Receipt events occur — such as a receipt being sent, viewed, or delivered. Instead of polling the API, you register an endpoint once and E-Receipt POSTs event data to it automatically. Use the endpoints documented on this page to manage your webhook registrations programmatically.
+
+## Register a webhook endpoint
+
+Send a `POST` request to create a new webhook endpoint and begin receiving events.
+
+```
+POST https://api.e-receipt.com/v1/webhooks
+```
+
+### Request body
+
+<ParamField body="url" type="string" required>
+  The HTTPS URL where E-Receipt will POST event notifications. Must use `https://`.
+</ParamField>
+
+<ParamField body="events" type="array of strings" required>
+  The list of event type strings you want to subscribe to (for example, `["receipt.sent", "receipt.viewed"]`). Pass `["*"]` to subscribe to all current and future event types.
+</ParamField>
+
+<ParamField body="description" type="string">
+  A human-readable label for this endpoint. Useful for identifying the endpoint in the dashboard or when listing your webhooks.
+</ParamField>
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.e-receipt.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://your-server.com/webhook",
+    "events": ["receipt.sent", "receipt.viewed"],
+    "description": "Production receipt notifications"
+  }'
+```
+
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "id": "wh_abc123",
+  "url": "https://your-server.com/webhook",
+  "events": ["receipt.sent", "receipt.viewed"],
+  "description": "Production receipt notifications",
+  "signing_secret": "whsec_...",
+  "created_at": "2025-03-15T14:00:00Z"
+}
+```
+
+<Warning>
+  The `signing_secret` is returned **only once**, at the moment of creation. Copy it immediately and store it securely (for example, as an environment variable). You cannot retrieve it again through the API.
+</Warning>
+
+---
+
+## List webhook endpoints
+
+Retrieve all webhook endpoints registered on your account.
+
+```
+GET https://api.e-receipt.com/v1/webhooks
+```
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl https://api.e-receipt.com/v1/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+### Example response
+
+```json
+[
+  {
+    "id": "wh_abc123",
+    "url": "https://your-server.com/webhook",
+    "events": ["receipt.sent", "receipt.viewed"],
+    "description": "Production receipt notifications",
+    "created_at": "2025-03-15T14:00:00Z"
+  },
+  {
+    "id": "wh_def456",
+    "url": "https://your-server.com/webhook-staging",
+    "events": ["*"],
+    "description": "Staging catch-all",
+    "created_at": "2025-03-10T09:30:00Z"
+  }
+]
+```
+
+The response is an array of webhook objects. Note that `signing_secret` is **not** included in list responses — store it securely when you first create the endpoint.
+
+---
+
+## Delete a webhook endpoint
+
+Remove a registered webhook endpoint. E-Receipt will immediately stop delivering events to the associated URL.
+
+```
+DELETE https://api.e-receipt.com/v1/webhooks/{id}
+```
+
+### Path parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the webhook endpoint to delete (for example, `wh_abc123`).
+</ParamField>
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE https://api.e-receipt.com/v1/webhooks/wh_abc123 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+### Response
+
+A successful deletion returns `204 No Content` with an empty response body.
+
+---
+
+## Verifying webhook signatures
+
+Every POST request E-Receipt sends to your endpoint includes an `X-EReceipt-Signature` header. This header contains an HMAC-SHA256 signature computed from the raw request body using your endpoint's `signing_secret` as the key. You should always verify this signature before processing the event payload to ensure the request genuinely came from E-Receipt and not a third party.
+
+The general verification flow is:
+
+1. Read the raw request body as bytes (before any JSON parsing).
+2. Compute `HMAC-SHA256(signing_secret, raw_body)`.
+3. Compare your computed signature against the value in `X-EReceipt-Signature` using a constant-time comparison function.
+4. Reject the request with `400 Bad Request` if the signatures do not match.
+
+For complete, language-specific verification code examples, see the [Webhooks integration guide](/integrations/webhooks).
+
+<Note>
+  E-Receipt uses **at-least-once delivery** — your endpoint may occasionally receive the same event more than once, especially after network errors or retries. Failed deliveries are retried up to **5 times** with exponential backoff. Use the event `id` field to deduplicate events your handler has already processed.
+</Note>

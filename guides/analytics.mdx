@@ -1,0 +1,130 @@
+---
+title: "Track Receipt Performance with E-Receipt Analytics"
+sidebarTitle: "Analytics"
+description: "Use E-Receipt analytics to monitor delivery rates, open rates, and customer engagement across all your digital receipts."
+---
+
+Understanding how your receipts perform after they leave your system is just as important as creating and sending them. E-Receipt analytics give you visibility into every stage of the delivery journey — from the moment a receipt is queued to the moment a customer opens it. Use this data to identify delivery problems before they affect customers, measure engagement across channels, and continuously improve the quality of your receipt program.
+
+## Dashboard overview
+
+The **Analytics** page gives you a high-level summary of your receipt performance across all channels and time periods.
+
+<CardGroup cols={2}>
+  <Card title="Total Receipts Sent" icon="receipt">
+    The total number of receipts dispatched during the selected date range, across all channels and customers.
+  </Card>
+  <Card title="Delivery Rate" icon="circle-check">
+    The percentage of sent receipts that were successfully delivered. Calculated as (Delivered ÷ Sent) × 100.
+  </Card>
+  <Card title="Open Rate" icon="envelope-open">
+    The percentage of delivered receipts that were opened or viewed by the customer, across email and SMS channels.
+  </Card>
+  <Card title="Failed Deliveries" icon="circle-exclamation">
+    The total count of receipts that could not be delivered during the selected period. Click to drill into failure reasons.
+  </Card>
+</CardGroup>
+
+Use the **date range filter** at the top of the page to scope all metrics to a specific period. Available presets are **Last 7 days**, **Last 30 days**, and **Custom range**. Custom ranges support any start and end date within your account's data retention window.
+
+## Delivery metrics
+
+The delivery metrics table breaks down the full funnel from creation to confirmed delivery, so you can pinpoint exactly where receipts are dropping off.
+
+| Metric | Description |
+|---|---|
+| **Queued** | Receipts accepted by the delivery pipeline and waiting to be dispatched. A high queued count may indicate a temporary processing delay. |
+| **Sent** | Receipts handed off to the email service provider or SMS carrier. This confirms the message left E-Receipt's infrastructure. |
+| **Delivered** | Receipts confirmed as delivered to the recipient's inbox or device by the carrier. Not all carriers provide delivery confirmations — this count may be lower than Sent for SMS. |
+| **Viewed** | Receipts that the customer has opened (email) or visited via the receipt link (SMS). This is the most meaningful engagement signal. |
+| **Failed** | Receipts that could not be delivered after all retry attempts. Review `failure_reason` values on individual receipts to diagnose issues. |
+
+**Delivery rate formula:**
+
+```
+Delivery Rate (%) = (Delivered / Sent) × 100
+```
+
+A healthy delivery rate is typically above 95%. Rates below 90% often indicate a data quality issue — for example, a batch of invalid email addresses or a high number of SMS opt-outs in your customer list.
+
+## Open rate
+
+Open rate measures how many delivered receipts were actually read by your customers, giving you a proxy for how engaging and relevant your receipts are.
+
+**How E-Receipt tracks opens:**
+
+- **Email:** E-Receipt embeds a 1×1 tracking pixel in each HTML email. When a customer's email client loads the email (including images), the pixel fires and records an open event. Note that some email clients (including Apple Mail with Mail Privacy Protection enabled) may pre-load images, which can inflate email open counts slightly.
+- **SMS:** Because SMS delivers a link rather than a rendered receipt, opens are tracked when the customer taps the link and visits the receipt viewer page. This is a more reliable signal than email pixel tracking.
+
+Both channel types record the `first_viewed_at` timestamp and increment a `view_count` on the receipt object each time the customer revisits the receipt.
+
+## Per-receipt analytics
+
+For a granular view of a single receipt's delivery journey, click into any receipt from the **Receipts** list. The **Delivery Timeline** panel shows a chronological log of every status change, with timestamps.
+
+The following fields are available on each receipt object and reflect the delivery lifecycle:
+
+| Field | Description |
+|---|---|
+| `sent_at` | The timestamp when the message was dispatched from E-Receipt's infrastructure. |
+| `delivered_at` | The timestamp when the carrier confirmed delivery to the recipient. |
+| `first_viewed_at` | The timestamp when the customer first opened the email or visited the receipt link. `null` if not yet viewed. |
+| `view_count` | The total number of times the customer has opened or visited this receipt. |
+
+Retrieve these fields via the API:
+
+```bash
+GET /v1/receipts/rcp_x7k2mn9p
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "id": "rcp_x7k2mn9p",
+  "delivery_status": "viewed",
+  "sent_at": "2025-03-15T10:25:03Z",
+  "delivered_at": "2025-03-15T10:25:09Z",
+  "first_viewed_at": "2025-03-15T11:02:44Z",
+  "view_count": 2
+}
+```
+
+## Exporting data
+
+Export your receipt data for use in external reporting tools, accounting systems, or custom dashboards.
+
+**From the dashboard:**
+
+Navigate to **Receipts**, apply any filters you need (date range, channel, delivery status), and click **Export**. E-Receipt generates a CSV file containing all matching receipts and emails it to your account address. Large exports may take a few minutes to process.
+
+**Via the API:**
+
+Use the `from` and `to` query parameters to retrieve receipts within a specific date range. Results are paginated — use `limit` and `starting_after` to iterate through all pages.
+
+```bash
+GET /v1/receipts?from=2025-01-01&to=2025-01-31&limit=100
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "rcp_x7k2mn9p",
+      "customer_id": "cus_abc123",
+      "total": 13.35,
+      "currency": "USD",
+      "delivery_status": "viewed",
+      "created_at": "2025-01-15T10:22:04Z"
+    }
+  ],
+  "has_more": true,
+  "next_cursor": "rcp_a1b2c3d4"
+}
+```
+
+Pass the `next_cursor` value as the `starting_after` parameter in your next request to fetch the following page of results.
+
+<Tip>
+  For real-time analytics and automated alerting, connect E-Receipt to your own data infrastructure using **webhooks**. E-Receipt can POST a payload to your endpoint whenever a receipt is delivered, viewed, or fails — giving you live visibility without polling the API. Configure webhooks in **Settings > Webhooks** and subscribe to events such as `receipt.delivered`, `receipt.viewed`, and `receipt.failed`. See the Webhooks guide for the full list of events and payload schemas.
+</Tip>

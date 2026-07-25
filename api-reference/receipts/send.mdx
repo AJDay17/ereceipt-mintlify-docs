@@ -1,0 +1,78 @@
+---
+title: "POST /receipts/:id/send — Send a Receipt"
+sidebarTitle: "Send Receipt"
+description: "POST /v1/receipts/:id/send — Delivers a receipt to the customer via email or SMS. Accepts channel and optional scheduled send time."
+---
+
+Triggering this endpoint delivers a receipt to its customer over your chosen channel. The receipt must already exist and be in `draft` status — receipts that have already been sent cannot be sent again through this endpoint. You can send immediately or schedule delivery for a future time using the `send_at` parameter. Once accepted, the receipt's `delivery_status` moves to `queued`.
+
+<Warning>
+  This action initiates delivery and cannot be undone. Double-check the receipt's line items and totals before calling this endpoint.
+</Warning>
+
+## Endpoint
+
+```
+POST https://api.e-receipt.com/v1/receipts/{id}/send
+```
+
+## Path parameter
+
+<ParamField path="id" type="string" required>
+  The unique ID of the receipt to send (e.g., `rec_7Xk3nPwQvY`). The receipt must be in `draft` status.
+</ParamField>
+
+## Request body
+
+<ParamField body="channel" type="string" required>
+  The delivery channel to use. Accepted values: `"email"` or `"sms"`. The customer profile must have a valid contact on record for the chosen channel, unless you override it with `to_email` or `to_phone`.
+</ParamField>
+
+<ParamField body="send_at" type="string">
+  ISO 8601 datetime for scheduled delivery (e.g., `"2025-03-15T18:00:00Z"`). If omitted, the receipt is dispatched immediately. Must be a future timestamp.
+</ParamField>
+
+<ParamField body="to_email" type="string">
+  Override the customer's stored email address for this send only. Useful for one-off re-deliveries or forwarding. Only applies when `channel` is `"email"`.
+</ParamField>
+
+<ParamField body="to_phone" type="string">
+  Override the customer's stored phone number for this send only, in E.164 format (e.g., `"+15551234567"`). Only applies when `channel` is `"sms"`.
+</ParamField>
+
+## Example request
+
+```bash cURL
+curl -X POST https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY/send \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel": "email",
+    "send_at": "2025-03-15T18:00:00Z"
+  }'
+```
+
+## Response
+
+A successful request returns HTTP `200 OK` confirming the receipt has been queued for delivery.
+
+```json
+{
+  "receipt_id": "rec_7Xk3nPwQvY",
+  "delivery_status": "queued",
+  "channel": "email",
+  "queued_at": "2025-03-15T14:00:00Z"
+}
+```
+
+<Note>
+  Poll [GET /v1/receipts/{id}](/api-reference/receipts/retrieve) to track the `delivery_status` as it progresses from `queued` → `sent` → `delivered` → `viewed`.
+</Note>
+
+## Errors
+
+| Error code | HTTP status | Description |
+|------------|-------------|-------------|
+| `receipt_already_sent` | `409 Conflict` | The receipt has already been sent. You cannot send a receipt more than once. |
+| `invalid_channel` | `400 Bad Request` | The value passed for `channel` is not `"email"` or `"sms"`. |
+| `missing_contact` | `422 Unprocessable Entity` | The customer has no email address (for `channel: "email"`) or phone number (for `channel: "sms"`) on record, and no override was provided. Update the customer profile or supply `to_email` / `to_phone` in the request. |

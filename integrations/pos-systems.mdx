@@ -1,0 +1,125 @@
+---
+title: "Connect E-Receipt to Your Point-of-Sale System"
+sidebarTitle: "POS Systems"
+description: "Integrate E-Receipt with popular POS systems including Square, Shopify POS, and Lightspeed to automatically send digital receipts at checkout."
+---
+
+Connecting E-Receipt to your point-of-sale system eliminates the manual steps between a completed transaction and a delivered receipt. Once the integration is active, every checkout automatically triggers a branded digital receipt to your customer's email or phone — no staff action required, no separate receipt printer needed, and no missed deliveries.
+
+## Supported POS systems
+
+| POS system | Status |
+|---|---|
+| Square | Available |
+| Shopify POS | Available |
+| Lightspeed | Available |
+| Toast | Coming Soon |
+| Clover | Coming Soon |
+
+## Square integration
+
+The Square integration connects your Square account to E-Receipt via OAuth and maps each Square location to a merchant location in E-Receipt. Once authorized, every completed Square payment automatically creates and delivers a receipt.
+
+<Steps>
+  <Step title="Open the Integrations page">
+    In the E-Receipt dashboard, navigate to **Settings → Integrations**.
+  </Step>
+  <Step title="Select Square">
+    Click the **Square** tile, then click **Connect**.
+  </Step>
+  <Step title="Authorize with Square">
+    You are redirected to Square's OAuth authorization screen. Sign in to your Square account and grant E-Receipt the requested permissions.
+  </Step>
+  <Step title="Map your locations">
+    After authorization, E-Receipt lists all locations associated with your Square account. Toggle on each location you want to activate, and confirm the mapping to the corresponding E-Receipt merchant location.
+  </Step>
+  <Step title="Save and activate">
+    Click **Save**. E-Receipt begins listening for new transactions on all enabled locations immediately.
+  </Step>
+</Steps>
+
+**What happens at checkout**
+
+Every time a Square transaction is completed on an enabled location, E-Receipt automatically:
+
+1. Retrieves the transaction details from the Square API.
+2. Creates a receipt using your configured template.
+3. Delivers the receipt to the customer via your chosen channel.
+
+**Configuration options**
+
+After connecting, you can adjust the following settings per location from **Settings → Integrations → Square → Configure**:
+
+| Option | Description |
+|---|---|
+| Delivery channel | Send receipts by email, SMS, or both |
+| Receipt template | Select which branded template to use for Square transactions |
+| Custom note | Add a location-specific message to every receipt (e.g., return policy, WiFi password) |
+
+## Shopify POS integration
+
+The Shopify POS integration is available as a Shopify app and is configured entirely within your Shopify admin — no manual API keys required.
+
+<Steps>
+  <Step title="Install the E-Receipt app">
+    Open the [Shopify App Store](https://apps.shopify.com) and search for **E-Receipt**. Click **Add app** and follow the installation prompts.
+  </Step>
+  <Step title="Connect your E-Receipt account">
+    After installation, open the E-Receipt app from your Shopify admin sidebar. Enter your E-Receipt API key when prompted, or click **Sign in with E-Receipt** to authenticate via OAuth.
+  </Step>
+  <Step title="Configure receipt settings">
+    In the app settings, choose your default delivery channel, select a receipt template, and set any custom notes for in-store purchases.
+  </Step>
+  <Step title="Map customer profiles">
+    Enable **Customer profile sync** to map each Shopify customer's email address to their E-Receipt customer profile. This ensures receipt history is consolidated across online and in-store purchases.
+  </Step>
+  <Step title="Disable Shopify's native POS receipt">
+    In **Shopify admin → Settings → Notifications**, disable the default POS receipt notification to prevent customers from receiving duplicate receipts.
+  </Step>
+</Steps>
+
+## Lightspeed integration
+
+Lightspeed uses an API key-based connection rather than OAuth. Retrieve your key from the Lightspeed dashboard and paste it into E-Receipt to activate the integration.
+
+<Steps>
+  <Step title="Generate an API key in Lightspeed">
+    In your Lightspeed back office, navigate to **Configuration → API Access** and create a new API key with read access to transactions and customer data. Copy the key.
+  </Step>
+  <Step title="Add the key to E-Receipt">
+    In the E-Receipt dashboard, go to **Settings → Integrations → Lightspeed** and paste your API key into the **Lightspeed API Key** field.
+  </Step>
+  <Step title="Select your outlet">
+    E-Receipt fetches your Lightspeed outlets automatically. Enable each outlet you want to activate and map it to the corresponding E-Receipt merchant location.
+  </Step>
+  <Step title="Save and verify">
+    Click **Save**. E-Receipt confirms the connection is active and displays the timestamp of the last successful sync.
+  </Step>
+</Steps>
+
+## Testing your POS integration
+
+Before going live, verify that the integration is working correctly using E-Receipt's test mode.
+
+<Steps>
+  <Step title="Enable test mode">
+    In **Settings → Integrations**, toggle **Test mode** on for the POS integration you want to test. Test mode intercepts real transaction events but sends receipts only to the test email address or phone number you specify.
+  </Step>
+  <Step title="Process a sample transaction">
+    Complete a test transaction in your POS system — use a $0.01 or voided transaction if your POS supports it, or simply complete a normal transaction while test mode is active.
+  </Step>
+  <Step title="Confirm receipt creation">
+    Open the E-Receipt dashboard and navigate to **Receipts**. You should see the receipt created from your test transaction, with delivery status showing the test destination.
+  </Step>
+  <Step title="Disable test mode">
+    Once you have confirmed everything looks correct, toggle **Test mode** off. Subsequent transactions will deliver receipts to real customers.
+  </Step>
+</Steps>
+
+<Note>
+  **Multi-location businesses:** each POS location (or outlet) maps to a separate merchant location in E-Receipt. This means you can assign a different receipt template, custom note, or delivery channel to each physical location. Manage location settings individually from **Settings → Locations**.
+</Note>
+
+<Warning>
+  **Disable your POS system's built-in receipt before going live.** Most POS systems send their own email or SMS receipt by default. If you leave the native receipt enabled alongside E-Receipt, your customers will receive two receipts for every transaction. Check your POS notification settings and turn off the default receipt as part of your activation checklist.
+</Warning>

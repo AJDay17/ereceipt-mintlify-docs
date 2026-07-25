@@ -1,0 +1,125 @@
+---
+title: "Receive Real-Time Events with E-Receipt Webhooks"
+sidebarTitle: "Webhooks"
+description: "Configure E-Receipt webhooks to receive real-time HTTP notifications when receipts are sent, delivered, viewed, or fail delivery."
+---
+
+Unlike polling, which requires your systems to repeatedly ask E-Receipt for updates, webhooks push event data to your server the moment something happens. When a receipt is sent, successfully delivered, opened by a customer, or encounters a delivery failure, E-Receipt immediately sends an HTTP POST request to your registered endpoint — giving you real-time visibility and the ability to trigger downstream actions without any delay.
+
+## Setting up a webhook
+
+<Steps>
+  <Step title="Open the Webhooks settings">
+    In the E-Receipt dashboard, navigate to **Settings → Webhooks** and click **Add Endpoint**.
+  </Step>
+  <Step title="Enter your endpoint URL">
+    Type the full HTTPS URL of the server endpoint that will receive events. E-Receipt only delivers webhooks to secure (`https://`) URLs.
+  </Step>
+  <Step title="Select events to subscribe to">
+    Choose the event types your endpoint should receive. You can subscribe to individual events (e.g., `receipt.viewed`) or select **All events** to receive everything. See the [Webhook Events reference](/api-reference/webhooks/events) for the full list.
+  </Step>
+  <Step title="Save and copy your signing secret">
+    Click **Save endpoint**. E-Receipt generates a unique signing secret for this endpoint — copy it and store it securely (for example, as an environment variable). You will use this secret to verify that incoming requests genuinely originate from E-Receipt.
+  </Step>
+</Steps>
+
+## Verifying webhook signatures
+
+Every webhook request from E-Receipt includes an `X-EReceipt-Signature` header containing an HMAC-SHA256 signature of the raw request body, computed using your endpoint's signing secret. Always verify this signature before processing the payload to protect against spoofed or tampered requests.
+
+The signature header format is:
+
+```
+X-EReceipt-Signature: sha256=<hex-encoded-hash>
+```
+
+The following Node.js function shows how to verify the signature:
+
+```javascript
+const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected),
+    Buffer.from(signature)
+  );
+}
+```
+
+Call this function before processing any event:
+
+```javascript
+app.post('/ereceipt-webhook', (req, res) => {
+  const signature = req.headers['x-ereceipt-signature'];
+  const isValid = verifyWebhook(req.rawBody, signature, process.env.ERECEIPT_WEBHOOK_SECRET);
+
+  if (!isValid) {
+    return res.status(401).send('Invalid signature');
+  }
+
+  // Safe to process the event
+  const event = req.body;
+  handleEvent(event);
+
+  res.status(200).send('OK');
+});
+```
+
+<Note>
+  Use `crypto.timingSafeEqual` rather than a simple string comparison (`===`) to prevent timing attacks that could allow an attacker to infer the correct signature character by character.
+</Note>
+
+## Webhook event payload
+
+All webhook events share a common envelope structure: an `event` type string, a `created_at` timestamp, and a `data` object containing the event-specific fields.
+
+Below is an example payload for the `receipt.viewed` event, which fires when a customer opens their digital receipt:
+
+```json
+{
+  "event": "receipt.viewed",
+  "created_at": "2025-03-15T14:32:00Z",
+  "data": {
+    "receipt_id": "rec_abc123",
+    "customer_id": "cus_xyz789",
+    "viewed_at": "2025-03-15T14:32:00Z"
+  }
+}
+```
+
+**Common event types**
+
+| Event | Fired when |
+|---|---|
+| `receipt.created` | A new receipt is successfully created |
+| `receipt.sent` | E-Receipt dispatches the receipt to the delivery provider |
+| `receipt.delivered` | The delivery provider confirms successful delivery |
+| `receipt.viewed` | The customer opens the receipt |
+| `receipt.delivery_failed` | Delivery fails after all retry attempts are exhausted |
+
+For the complete event catalog including all fields for each event type, see the [Webhook Events reference](/api-reference/webhooks/events).
+
+## Retries and failures
+
+If your endpoint returns a non-2xx HTTP status code, times out, or is unreachable, E-Receipt treats the delivery as failed and automatically retries using exponential backoff. Retries follow this schedule:
+
+| Attempt | Delay after previous failure |
+|---|---|
+| 1st retry | 1 minute |
+| 2nd retry | 5 minutes |
+| 3rd retry | 30 minutes |
+| 4th retry | 2 hours |
+| 5th retry | 8 hours |
+
+After 5 failed attempts, E-Receipt marks the event as undelivered and stops retrying. You can view and manually replay failed events from **Settings → Webhooks → [your endpoint] → Failed deliveries**.
+
+To acknowledge successful receipt of a webhook, your endpoint must return any HTTP `2xx` status code.
+
+<Warning>
+  **Return HTTP 200 immediately, then process asynchronously.** If your endpoint takes too long to respond — for example, because it is performing database writes, calling third-party services, or running complex logic — E-Receipt may time out the connection and treat the delivery as failed, triggering unnecessary retries. Instead, acknowledge the webhook instantly with a `200 OK` response and hand off the processing to a background queue or worker. This keeps your endpoint fast and prevents duplicate event processing caused by retry storms.
+</Warning>

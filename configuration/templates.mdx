@@ -1,0 +1,145 @@
+---
+title: "Create and Manage Receipt Templates in E-Receipt"
+sidebarTitle: "Templates"
+description: "Build reusable receipt templates in E-Receipt to control layout, content sections, and custom fields for different transaction types."
+---
+
+Templates let you define a consistent receipt layout for different transaction contexts — a quick-service café might want a minimal single-item layout, a retail store might need a full itemized breakdown with tax lines, and an e-commerce order might include a shipping address and tracking link. By creating a dedicated template for each context, you guarantee that every receipt your customers receive is clear, on-brand, and contains exactly the right information.
+
+## Creating a template
+
+<Steps>
+  <Step title="Open the Templates page">
+    Navigate to **Templates > New Template** in your dashboard.
+  </Step>
+  <Step title="Name your template">
+    Give the template a clear, descriptive name that identifies its purpose. Good examples include `Retail Purchase`, `Online Order`, `Café Counter Sale`, or `Event Ticket`.
+  </Step>
+  <Step title="Choose a base layout">
+    Select one of three starting layouts:
+
+    | Layout | Best for |
+    |--------|----------|
+    | **Minimal** | Single-item or low-detail transactions (café, parking, quick service) |
+    | **Standard** | General retail with itemized list, totals, and payment method |
+    | **Detailed** | E-commerce or high-value transactions requiring full order breakdown, shipping info, and notes |
+  </Step>
+  <Step title="Toggle content sections">
+    Enable or disable individual sections to match your transaction type:
+
+    - **Itemized list** — line-by-line breakdown of purchased items, quantities, and prices
+    - **Subtotal** — pre-tax or pre-discount total
+    - **Tax** — tax amount and applicable rate
+    - **Discount** — coupon or promotional discount applied
+    - **Notes** — free-text field for order instructions, warranty info, or custom messages
+    - **QR code** — scannable code linking to the digital receipt or a custom URL
+  </Step>
+  <Step title="Save your template">
+    Click **Save Template**. Your new template is now available to use via the dashboard or by referencing its `template_id` in API requests.
+  </Step>
+</Steps>
+
+## Template variables
+
+Template variables let you inject dynamic, transaction-specific data into any text block within your template. At send time, E-Receipt replaces each variable with the corresponding value from the receipt payload.
+
+Use the double-brace syntax anywhere in a text block:
+
+```
+Thank you for your purchase, {{customer.name}}!
+Your total of {{receipt.total}} {{receipt.currency}} was received on {{receipt.date}}.
+```
+
+### Available variables
+
+<AccordionGroup>
+  <Accordion title="receipt.*">
+    | Variable | Description |
+    |----------|-------------|
+    | `{{receipt.id}}` | Unique receipt identifier |
+    | `{{receipt.date}}` | Date the receipt was issued (formatted per your account locale) |
+    | `{{receipt.time}}` | Time the receipt was issued |
+    | `{{receipt.total}}` | Grand total amount |
+    | `{{receipt.subtotal}}` | Subtotal before tax and discounts |
+    | `{{receipt.tax}}` | Total tax amount |
+    | `{{receipt.discount}}` | Total discount amount |
+    | `{{receipt.currency}}` | ISO 4217 currency code |
+    | `{{receipt.payment_method}}` | Payment method label (e.g., "Visa ending 4242") |
+    | `{{receipt.notes}}` | Custom notes passed in the API request |
+  </Accordion>
+  <Accordion title="customer.*">
+    | Variable | Description |
+    |----------|-------------|
+    | `{{customer.name}}` | Customer's full name |
+    | `{{customer.email}}` | Customer's email address |
+    | `{{customer.phone}}` | Customer's phone number |
+    | `{{customer.id}}` | Your internal customer identifier |
+  </Accordion>
+  <Accordion title="merchant.*">
+    | Variable | Description |
+    |----------|-------------|
+    | `{{merchant.name}}` | Business name from your account profile |
+    | `{{merchant.address}}` | Business address from your account profile |
+    | `{{merchant.website}}` | Business website URL |
+    | `{{merchant.support_email}}` | Support email from your account profile |
+    | `{{merchant.location_name}}` | Name of the specific merchant location, if configured |
+  </Accordion>
+  <Accordion title="metadata.*">
+    | Variable | Description |
+    |----------|-------------|
+    | `{{metadata.*}}` | Any key-value pair passed in the `metadata` object of the API request. For example, `{{metadata.order_number}}` renders the value of `metadata.order_number`. |
+  </Accordion>
+</AccordionGroup>
+
+## Setting a default template
+
+Your default template is used automatically for every receipt that does not specify a `template_id`. Set it once and every receipt you issue inherits a consistent layout without any extra work.
+
+<Steps>
+  <Step title="Select your template">
+    Navigate to **Templates** and click the template you want to set as the default.
+  </Step>
+  <Step title="Set as default">
+    Click **Set as Default**. A default badge appears next to the template name in your list.
+  </Step>
+</Steps>
+
+To override the default for a specific receipt, pass the `template_id` field in your API request:
+
+```json
+{
+  "template_id": "tmpl_abc123",
+  "customer": {
+    "email": "customer@example.com"
+  },
+  "line_items": [...]
+}
+```
+
+## Managing templates
+
+As your business evolves, you can maintain your template library directly from the dashboard or via the API.
+
+### Dashboard actions
+
+From the **Templates** list, you can:
+
+- **Edit** — update the layout, sections, or text of an existing template.
+- **Duplicate** — create a copy of a template as a starting point for a new variation.
+- **Archive** — hide templates you no longer use from the active list without deleting them. Archived templates can be restored at any time.
+- **Delete** — permanently remove a template. This action cannot be undone.
+
+### API access
+
+List all templates programmatically to power dynamic template selection in your integration:
+
+```bash
+curl https://api.e-receipt.com/v1/templates \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response returns an array of template objects including each template's `id`, `name`, `is_default`, and `status` fields.
+
+<Note>
+  Changes you make to a template — including layout, section toggles, and variable text — apply to receipts issued **after** the change is saved. Receipts that have already been sent are not affected and will continue to display the content that was rendered at the time of delivery. If you need to correct an already-sent receipt, resend it using an updated template via the API.
+</Note>

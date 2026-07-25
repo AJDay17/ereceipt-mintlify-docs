@@ -1,0 +1,225 @@
+---
+title: "E-Receipt Webhook Event Types Reference"
+sidebarTitle: "Webhook Events"
+description: "Complete reference of all E-Receipt webhook event types, their payloads, and when they are triggered in the receipt lifecycle."
+---
+
+E-Receipt emits events at each stage of the receipt and customer lifecycle — from the moment a receipt is created through delivery, viewing, and customer preference changes. This page documents every event type, when it fires, and the shape of the `data` object you can expect in its payload.
+
+## Event payload structure
+
+Every webhook event, regardless of type, is wrapped in the same top-level envelope. The `data` field contains the event-specific object described in the sections below.
+
+```json
+{
+  "id": "evt_abc123",
+  "event": "receipt.sent",
+  "created_at": "2025-03-15T14:00:00Z",
+  "data": { ... }
+}
+```
+
+### Envelope fields
+
+<ResponseField name="id" type="string">
+  A unique identifier for this event. Use this field to deduplicate events — no two events share the same `id`, even if they describe the same underlying action.
+</ResponseField>
+
+<ResponseField name="event" type="string">
+  The event type string that identifies what occurred (for example, `receipt.sent` or `customer.unsubscribed`).
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp recording when the event was generated on E-Receipt's servers.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The event-specific payload object. Its structure depends on the `event` type and is documented for each event below.
+</ResponseField>
+
+---
+
+## Receipt events
+
+Receipt events track the full journey of a receipt from creation to final delivery status.
+
+### `receipt.created`
+
+Fired immediately when a new receipt record is created in E-Receipt, before any delivery attempt.
+
+```json
+{
+  "receipt_id": "rcp_1a2b3c",
+  "customer_id": "cus_9z8y7x",
+  "total": 42.50,
+  "currency": "USD",
+  "created_at": "2025-03-15T14:00:00Z"
+}
+```
+
+<ResponseField name="receipt_id" type="string">Unique identifier for the receipt.</ResponseField>
+<ResponseField name="customer_id" type="string">Identifier of the customer this receipt belongs to.</ResponseField>
+<ResponseField name="total" type="number">The receipt total as a decimal number.</ResponseField>
+<ResponseField name="currency" type="string">ISO 4217 currency code (for example, `USD`, `EUR`).</ResponseField>
+<ResponseField name="created_at" type="string">Timestamp when the receipt was created.</ResponseField>
+
+---
+
+### `receipt.sent`
+
+Fired when the receipt delivery is successfully queued for dispatch via the selected channel (email or SMS). This event confirms the send was initiated, not that it was delivered.
+
+```json
+{
+  "receipt_id": "rcp_1a2b3c",
+  "customer_id": "cus_9z8y7x",
+  "channel": "email",
+  "sent_at": "2025-03-15T14:00:05Z"
+}
+```
+
+<ResponseField name="receipt_id" type="string">Unique identifier for the receipt.</ResponseField>
+<ResponseField name="customer_id" type="string">Identifier of the customer receiving the receipt.</ResponseField>
+<ResponseField name="channel" type="string">Delivery channel used — either `email` or `sms`.</ResponseField>
+<ResponseField name="sent_at" type="string">Timestamp when the delivery was queued.</ResponseField>
+
+---
+
+### `receipt.delivered`
+
+Fired when the email or SMS provider confirms successful delivery to the customer's inbox or device.
+
+```json
+{
+  "receipt_id": "rcp_1a2b3c",
+  "customer_id": "cus_9z8y7x",
+  "channel": "email",
+  "delivered_at": "2025-03-15T14:00:22Z"
+}
+```
+
+<ResponseField name="receipt_id" type="string">Unique identifier for the receipt.</ResponseField>
+<ResponseField name="customer_id" type="string">Identifier of the customer.</ResponseField>
+<ResponseField name="channel" type="string">Delivery channel — `email` or `sms`.</ResponseField>
+<ResponseField name="delivered_at" type="string">Timestamp when delivery was confirmed.</ResponseField>
+
+---
+
+### `receipt.viewed`
+
+Fired each time the customer opens or views the receipt. This event can fire multiple times for the same receipt; use `view_count` to track how many times it has been opened.
+
+```json
+{
+  "receipt_id": "rcp_1a2b3c",
+  "customer_id": "cus_9z8y7x",
+  "viewed_at": "2025-03-15T14:05:10Z",
+  "view_count": 2
+}
+```
+
+<ResponseField name="receipt_id" type="string">Unique identifier for the receipt.</ResponseField>
+<ResponseField name="customer_id" type="string">Identifier of the customer.</ResponseField>
+<ResponseField name="viewed_at" type="string">Timestamp of this particular view.</ResponseField>
+<ResponseField name="view_count" type="number">Total number of times this receipt has been viewed, including this event.</ResponseField>
+
+---
+
+### `receipt.failed`
+
+Fired when E-Receipt permanently fails to deliver a receipt after exhausting all retry attempts. Inspect `reason` to understand the cause of failure.
+
+```json
+{
+  "receipt_id": "rcp_1a2b3c",
+  "customer_id": "cus_9z8y7x",
+  "channel": "email",
+  "reason": "invalid_email_address",
+  "failed_at": "2025-03-15T14:30:00Z"
+}
+```
+
+<ResponseField name="receipt_id" type="string">Unique identifier for the receipt.</ResponseField>
+<ResponseField name="customer_id" type="string">Identifier of the customer.</ResponseField>
+<ResponseField name="channel" type="string">Delivery channel that failed — `email` or `sms`.</ResponseField>
+<ResponseField name="reason" type="string">Machine-readable reason code describing why delivery failed (for example, `invalid_email_address`, `mailbox_full`, `carrier_rejected`).</ResponseField>
+<ResponseField name="failed_at" type="string">Timestamp when the final delivery attempt failed.</ResponseField>
+
+---
+
+## Customer events
+
+Customer events fire when a customer record is created or when a customer changes their communication preferences.
+
+### `customer.created`
+
+Fired when a new customer is added to your E-Receipt account, either via the API or the dashboard.
+
+```json
+{
+  "customer_id": "cus_9z8y7x",
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "phone": "+15555550100",
+  "created_at": "2025-03-10T09:00:00Z"
+}
+```
+
+<ResponseField name="customer_id" type="string">Unique identifier for the new customer.</ResponseField>
+<ResponseField name="name" type="string">The customer's full name.</ResponseField>
+<ResponseField name="email" type="string">The customer's email address, if provided.</ResponseField>
+<ResponseField name="phone" type="string">The customer's phone number in E.164 format, if provided.</ResponseField>
+<ResponseField name="created_at" type="string">Timestamp when the customer record was created.</ResponseField>
+
+---
+
+### `customer.unsubscribed`
+
+Fired when a customer opts out of receipt delivery on a specific channel. After this event, E-Receipt will no longer send receipts to the customer on that channel until they re-subscribe.
+
+```json
+{
+  "customer_id": "cus_9z8y7x",
+  "channel": "email",
+  "unsubscribed_at": "2025-03-16T08:45:00Z"
+}
+```
+
+<ResponseField name="customer_id" type="string">Unique identifier for the customer who unsubscribed.</ResponseField>
+<ResponseField name="channel" type="string">The channel the customer opted out of — `email` or `sms`.</ResponseField>
+<ResponseField name="unsubscribed_at" type="string">Timestamp when the opt-out was recorded.</ResponseField>
+
+---
+
+## Handling duplicate events
+
+Because E-Receipt uses at-least-once delivery, your endpoint may occasionally receive the same event more than once — for example, when a delivery attempt times out before receiving your `200` acknowledgment. To handle this safely, treat your event processing as idempotent by using the event `id` field to detect duplicates.
+
+A reliable deduplication pattern looks like this:
+
+```javascript
+app.post("/webhook", (req, res) => {
+  const event = req.body;
+
+  // Check whether you have already processed this event ID
+  if (await db.eventAlreadyProcessed(event.id)) {
+    return res.sendStatus(200); // Acknowledge without reprocessing
+  }
+
+  // Process the event
+  await handleEvent(event);
+
+  // Mark the event ID as processed
+  await db.markEventProcessed(event.id);
+
+  res.sendStatus(200);
+});
+```
+
+<Tip>
+  Store processed event IDs in a fast, persistent store (such as Redis or a database table with a unique index on `event_id`). You only need to retain IDs for a deduplication window — E-Receipt does not retry deliveries after 24 hours.
+</Tip>
+
+<Note>
+  When you register a webhook endpoint, you choose which events to subscribe to by passing an `events` array. Subscribing only to the events your integration actually uses reduces noise and keeps your handler logic simple. Pass `["*"]` only if you genuinely need to react to every event type, including new ones E-Receipt adds in the future.
+</Note>

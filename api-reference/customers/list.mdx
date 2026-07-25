@@ -1,0 +1,94 @@
+---
+title: "GET /customers — List Customer Profiles"
+sidebarTitle: "List Customers"
+description: "GET /v1/customers — Returns a paginated list of customer profiles. Filter by email, phone, or opt-in status."
+---
+
+List all customer profiles in your account for CRM synchronization, bulk operations, or compliance reporting. Filter by contact details or opt-in status to target specific segments, and page through large datasets using the `page` and `per_page` parameters. Results are returned in reverse chronological order — most recently created first.
+
+## Endpoint
+
+```
+GET https://api.e-receipt.com/v1/customers
+```
+
+## Query parameters
+
+<ParamField query="email" type="string">
+  Filter by exact email address. Returns at most one result. Use this to look up a customer when you have their email but not their E-Receipt ID.
+</ParamField>
+
+<ParamField query="phone" type="string">
+  Filter by exact phone number in E.164 format (e.g., `+15551234567`). Returns at most one result.
+</ParamField>
+
+<ParamField query="email_opted_in" type="boolean">
+  Filter by email opt-in status. Pass `true` to return only customers who accept email receipts, or `false` to list those who have opted out.
+</ParamField>
+
+<ParamField query="sms_opted_in" type="boolean">
+  Filter by SMS opt-in status. Pass `true` to return only customers who accept SMS receipts, or `false` to list those who have opted out.
+</ParamField>
+
+<ParamField query="page" type="integer">
+  Page number to retrieve. Defaults to `1`.
+</ParamField>
+
+<ParamField query="per_page" type="integer">
+  Number of customer profiles to return per page. Defaults to `20`. Maximum `100`.
+</ParamField>
+
+## Example request
+
+```bash cURL
+curl "https://api.e-receipt.com/v1/customers?email_opted_in=true&page=1&per_page=20" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+A successful request returns HTTP `200 OK` with a paginated envelope containing a `data` array of customer objects and a `meta` object with pagination details.
+
+```json
+{
+  "data": [
+    {
+      "id": "cus_9KJ2mXpLqR",
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "phone": "+15551234567",
+      "preferred_channel": "email",
+      "email_opted_in": true,
+      "sms_opted_in": true,
+      "metadata": {
+        "crm_id": "CRM-98312",
+        "loyalty_tier": "gold"
+      },
+      "created_at": "2025-03-15T09:30:00Z",
+      "updated_at": "2025-03-15T09:30:00Z"
+    },
+    {
+      "id": "cus_3RT8wZnKpM",
+      "name": "Carlos Rivera",
+      "email": "carlos.rivera@example.com",
+      "phone": null,
+      "preferred_channel": "email",
+      "email_opted_in": true,
+      "sms_opted_in": false,
+      "metadata": {},
+      "created_at": "2025-03-14T11:15:00Z",
+      "updated_at": "2025-03-14T11:15:00Z"
+    }
+  ],
+  "meta": {
+    "total": 1340,
+    "page": 1,
+    "per_page": 20,
+    "total_pages": 67
+  }
+}
+```
+
+<Tip>
+  To find a specific customer when you only know their email or phone number, use the `email` or `phone` query parameter instead of iterating through pages. These filters perform an exact match and return results instantly.
+</Tip>

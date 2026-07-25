@@ -1,0 +1,192 @@
+---
+title: "Manage Customer Profiles and Purchase History"
+sidebarTitle: "Manage Customers"
+description: "Create and manage customer profiles in E-Receipt to track purchase history, delivery preferences, and contact details."
+---
+
+Customer profiles are the foundation of personalized receipt delivery in E-Receipt. Every receipt you create is linked to a customer record, which stores their contact details, delivery preferences, and full purchase history. By maintaining accurate customer profiles, you can ensure receipts reach the right person on the right channel, give customers a complete record of their transactions, and respect their communication preferences at all times.
+
+## Creating a customer
+
+You can add customers one at a time through the dashboard, create them programmatically via the API, or import them in bulk from a CSV file.
+
+**From the dashboard:**
+
+<Steps>
+  <Step title="Navigate to Customers">
+    Click **Customers** in the left sidebar.
+  </Step>
+  <Step title="Add a new customer">
+    Click the **Add Customer** button in the top-right corner.
+  </Step>
+  <Step title="Fill in the customer details">
+    Enter the customer's name, email address, and phone number. Set their preferred delivery channel and confirm opt-in status for email and SMS. Click **Save**.
+  </Step>
+</Steps>
+
+**Via the API:**
+
+```bash
+POST /v1/customers
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "phone": "+15551234567"
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "cus_abc123",
+  "name": "Jane Smith",
+  "email": "jane@example.com",
+  "phone": "+15551234567",
+  "preferred_channel": "email",
+  "email_opted_in": true,
+  "sms_opted_in": false,
+  "created_at": "2025-03-15T10:00:00Z"
+}
+```
+
+New customers default to `preferred_channel: "email"` and `email_opted_in: true`. SMS opt-in is always `false` by default — you must update it explicitly after obtaining documented consent.
+
+## Finding and updating customers
+
+**From the dashboard:**
+
+Use the search bar at the top of the **Customers** page to search by name or email address. Results update as you type. Click any customer row to open their full profile.
+
+**Via the API:**
+
+Look up a customer by email address using the `email` query parameter:
+
+```bash
+GET /v1/customers?email=jane@example.com
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "cus_abc123",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "phone": "+15551234567"
+    }
+  ]
+}
+```
+
+To update a customer's details, send a `PATCH` request with only the fields you want to change:
+
+```bash
+PATCH /v1/customers/cus_abc123
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "phone": "+15559876543",
+  "preferred_channel": "sms"
+}
+```
+
+All fields not included in the request body are left unchanged.
+
+## Delivery preferences
+
+Each customer record stores their preferred delivery channel and opt-in status for each channel. These fields control how E-Receipt routes receipts when you don't specify a channel explicitly.
+
+| Field | Type | Description |
+|---|---|---|
+| `preferred_channel` | string | The default channel to use when sending receipts. One of `"email"`, `"sms"`, or `"both"`. |
+| `email_opted_in` | boolean | Whether the customer has consented to receive email receipts. Receipts cannot be emailed when this is `false`. |
+| `sms_opted_in` | boolean | Whether the customer has consented to receive SMS receipts. Receipts cannot be sent by SMS when this is `false`. |
+
+**Handling opt-outs:**
+
+- **Email:** Every email receipt includes a one-click unsubscribe link in the footer. When a customer clicks it, E-Receipt automatically sets `email_opted_in` to `false` and no further email receipts will be sent to that address.
+- **SMS:** Customers can reply **STOP** to any SMS receipt. E-Receipt processes the STOP reply automatically and sets `sms_opted_in` to `false`. Customers can re-enable SMS receipts by replying **START**.
+
+You can also update opt-in status manually via `PATCH /v1/customers/{id}` if a customer contacts you directly to change their preferences.
+
+## Viewing purchase history
+
+Every receipt linked to a customer is accessible through their profile, giving you a complete chronological record of all their transactions.
+
+**From the dashboard:**
+
+Navigate to **Customers**, click the customer's name, and select the **Receipts** tab. All receipts are listed in reverse chronological order with their date, total, and delivery status.
+
+**Via the API:**
+
+Retrieve all receipts for a specific customer using the `customer_id` query parameter:
+
+```bash
+GET /v1/receipts?customer_id=cus_abc123
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "rcp_x7k2mn9p",
+      "total": 13.35,
+      "currency": "USD",
+      "delivery_status": "viewed",
+      "created_at": "2025-03-15T10:22:04Z"
+    },
+    {
+      "id": "rcp_y9p3qr4s",
+      "total": 27.80,
+      "currency": "USD",
+      "delivery_status": "delivered",
+      "created_at": "2025-03-10T14:05:11Z"
+    }
+  ],
+  "has_more": false
+}
+```
+
+The response is paginated. Pass `limit` and `starting_after` parameters to page through large histories.
+
+## Importing customers in bulk
+
+To add many customers at once, upload a CSV file from the dashboard.
+
+<Steps>
+  <Step title="Prepare your CSV file">
+    Create a CSV with the following column headers: `name`, `email`, `phone`. Each row represents one customer. The `name` and `email` columns are required; `phone` is optional.
+
+    ```
+    name,email,phone
+    Jane Smith,jane@example.com,+15551234567
+    Carlos Rivera,carlos@example.com,+15559876543
+    Priya Patel,priya@example.com,
+    ```
+  </Step>
+  <Step title="Upload the file">
+    Go to **Customers > Import**, click **Upload CSV**, and select your file. E-Receipt validates the file format and shows a preview of the rows to be imported.
+  </Step>
+  <Step title="Confirm the import">
+    Review the preview and click **Import Customers**. A progress indicator shows the import status. You'll receive an in-app notification and an email summary when the import completes.
+  </Step>
+</Steps>
+
+<Note>
+  E-Receipt deduplicates imported customers by **email address**. If an imported row has the same email as an existing customer, the existing record is updated with any new information rather than creating a duplicate. Phone numbers and names are overwritten if the imported values differ from what's on file.
+</Note>
+
+<Warning>
+  Customer data stored in E-Receipt is subject to privacy regulations including **GDPR** (European Union) and **CCPA** (California, United States). If a customer submits a right-to-erasure or deletion request, you must delete their profile and all associated personal data. Use `DELETE /v1/customers/{id}` to permanently remove a customer record, including their contact details and delivery preferences. Note that receipt records may need to be retained separately for tax and accounting compliance — consult your legal counsel for guidance specific to your jurisdiction.
+</Warning>

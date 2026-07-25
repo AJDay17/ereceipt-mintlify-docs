@@ -1,13 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "E-Receipt",
+  "projectType": "saas",
+  "projectName": "E-Receipt",
+  "projectDescription": "A digital receipt platform that lets businesses issue, manage, and share electronic receipts with their customers.",
   "theme": "almond",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -97,14 +95,25 @@
       }
     ]
   },
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.e-receipt.com"
-    }
-  },
-  "footer": {
-    "socials": {}
-  }
+  "keyFeatures": [
+    "Instant digital receipt generation and delivery via email or SMS",
+    "Customizable receipt templates with brand logo and colors",
+    "Customer management and purchase history tracking",
+    "Analytics dashboard with receipt open rates and engagement metrics",
+    "POS and e-commerce platform integrations",
+    "REST API for programmatic receipt creation and management",
+    "Webhook notifications for real-time receipt status updates",
+    "Multi-location and multi-channel support"
+  ],
+  "publicApiSurface": [
+    "POST /receipts — create a new receipt",
+    "GET /receipts/:id — retrieve a receipt",
+    "GET /receipts — list receipts",
+    "POST /receipts/:id/send — send a receipt to a customer",
+    "POST /customers — create a customer",
+    "GET /customers/:id — retrieve a customer",
+    "GET /customers — list customers",
+    "POST /webhooks — register a webhook endpoint",
+    "GET /webhooks/events — list webhook event types"
+  ]
 }

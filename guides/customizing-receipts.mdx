@@ -1,0 +1,138 @@
+---
+title: "Customize Receipt Templates and Branding"
+sidebarTitle: "Customize Receipts"
+description: "Personalize your E-Receipt digital receipts with your logo, brand colors, custom fields, and layout templates."
+---
+
+The receipt your customer receives is often the last touchpoint in a transaction, and it shapes how they remember your brand. A well-designed receipt that carries your logo, colors, and voice reinforces trust and professionalism — while a generic one is a missed opportunity. E-Receipt gives you full control over the visual identity and content structure of every receipt you send, from a simple logo swap to fully customized layouts with dynamic fields.
+
+## Setting up your brand identity
+
+Your brand settings apply globally to all receipts that use the default template. Configure them once and every new receipt will reflect your identity automatically.
+
+<Steps>
+  <Step title="Open brand settings">
+    Navigate to **Settings > Branding** in the left sidebar.
+  </Step>
+  <Step title="Upload your logo">
+    Click **Upload Logo** and select a PNG or SVG file. For best results, use a logo with a transparent background and a minimum width of 300px. The logo will be displayed in the header of every receipt.
+  </Step>
+  <Step title="Set your colors">
+    Choose a **Primary Color** (used for headings, buttons, and borders) and a **Secondary Color** (used for backgrounds and accents). Enter hex codes directly or use the color picker.
+  </Step>
+  <Step title="Choose a font">
+    Select a font from the available list. All fonts are web-safe and render consistently across email clients and browsers.
+  </Step>
+  <Step title="Preview your changes">
+    The **Live Preview** panel on the right updates in real time as you adjust settings. Toggle between the email and SMS viewer views to check how your brand appears on each channel. Click **Save** when you're satisfied.
+  </Step>
+</Steps>
+
+## Creating custom templates
+
+Templates define the layout and content structure of a receipt. You can create multiple templates for different use cases — for example, a purchase receipt, a refund receipt, and an event ticket — and assign them per receipt type or individual transaction.
+
+<Steps>
+  <Step title="Navigate to Templates">
+    Click **Templates** in the left sidebar, then click **New Template**.
+  </Step>
+  <Step title="Name your template">
+    Give the template a clear internal name (e.g., `"Retail Purchase — Standard"`) so it's easy to identify when assigning it to receipts.
+  </Step>
+  <Step title="Configure the template sections">
+    Each template is made up of three sections you can customize independently:
+
+    - **Header** — Displays your logo and merchant name. You can adjust the alignment, add a tagline, or include a banner image.
+    - **Body** — The main content area containing the line items table, subtotal, tax, discount, and total rows. You can reorder fields, show or hide columns, and add custom row labels.
+    - **Footer** — Appears below the totals. Use this area for thank-you notes, social media links, a return or refund policy snippet, or a QR code linking to your website.
+  </Step>
+  <Step title="Save and assign the template">
+    Click **Save Template**. On the save confirmation screen, choose one of the following:
+    - **Set as account default** — All receipts without an explicit `template_id` will use this template.
+    - **Assign to a receipt type** — Apply this template automatically to a specific category (e.g., all refunds).
+    - **Manual assignment only** — Reference it explicitly by ID when creating receipts via the API.
+  </Step>
+</Steps>
+
+## Using a template via the API
+
+To apply a specific template when creating a receipt, include the `template_id` field in your `POST /v1/receipts` request body.
+
+```json
+{
+  "customer_id": "cus_abc123",
+  "currency": "USD",
+  "template_id": "tpl_abc123",
+  "items": [
+    { "name": "Coffee", "quantity": 2, "unit_price": 4.50, "total": 9.00 }
+  ],
+  "subtotal": 9.00,
+  "tax": 0.81,
+  "total": 9.81
+}
+```
+
+To retrieve the list of all templates available on your account, including their IDs and names, call:
+
+```bash
+GET /v1/templates
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "tpl_abc123",
+      "name": "Retail Purchase — Standard",
+      "is_default": true,
+      "created_at": "2025-01-10T09:00:00Z"
+    },
+    {
+      "id": "tpl_def456",
+      "name": "Refund Receipt",
+      "is_default": false,
+      "created_at": "2025-02-03T14:30:00Z"
+    }
+  ]
+}
+```
+
+## Custom fields
+
+The `metadata` object on a receipt lets you attach arbitrary key-value data to any transaction. This data can drive dynamic content inside your templates, enabling you to display order numbers, loyalty points, cashier names, store locations, and any other transaction-specific information directly on the receipt.
+
+**Attach metadata when creating the receipt:**
+
+```json
+{
+  "customer_id": "cus_abc123",
+  "currency": "USD",
+  "total": 13.35,
+  "metadata": {
+    "store_location": "Downtown",
+    "cashier_name": "Alex",
+    "loyalty_points_earned": 27
+  }
+}
+```
+
+**Reference metadata fields in your template using double-brace syntax:**
+
+In the template editor, insert variables anywhere in the header, body, or footer using the `{{metadata.key}}` syntax:
+
+```
+Served by: {{metadata.cashier_name}}
+Location: {{metadata.store_location}}
+You earned {{metadata.loyalty_points_earned}} loyalty points on this visit!
+```
+
+At render time, E-Receipt replaces each variable with the corresponding value from the receipt's `metadata` object. If a key is missing from the metadata, the variable renders as an empty string by default (you can configure a fallback value in the template editor).
+
+<Tip>
+  All E-Receipt templates are **fully responsive** and adapt automatically to the screen size of the device viewing them. Receipt emails render correctly on mobile inboxes, tablets, and desktop clients without any extra configuration. When designing your template, use the **Mobile Preview** toggle in the template editor to verify how each section looks on a small screen before saving.
+</Tip>
+
+<Note>
+  Always use the **Preview** button on a template before setting it as your account default or assigning it to a live receipt type. The preview renders the template with sample data so you can catch layout issues, missing variables, and formatting problems without sending a real receipt to a customer. You can also send a test receipt to your own email or phone directly from the preview screen.
+</Note>

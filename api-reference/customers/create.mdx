@@ -1,0 +1,83 @@
+---
+title: "POST /customers — Create a Customer Profile"
+sidebarTitle: "Create Customer"
+description: "POST /v1/customers — Creates a new customer profile with name, email, and phone. Returns the customer object with generated ID."
+---
+
+Create a customer profile before sending receipts. The customer ID this endpoint returns is what links individual receipts to a real person — you will pass it as `customer_id` whenever you create a receipt. Every customer must have at least one contact method (email or phone) so receipts can actually be delivered.
+
+## Endpoint
+
+```
+POST https://api.e-receipt.com/v1/customers
+```
+
+## Request body
+
+<ParamField body="name" type="string" required>
+  The customer's full name as it should appear on receipts and in your dashboard.
+</ParamField>
+
+<ParamField body="email" type="string">
+  The customer's email address. Required if `phone` is not provided. Must be a valid email format.
+</ParamField>
+
+<ParamField body="phone" type="string">
+  The customer's phone number in E.164 format (e.g., `"+15551234567"`). Required if `email` is not provided.
+</ParamField>
+
+<ParamField body="preferred_channel" type="string">
+  The default delivery channel to use when sending receipts to this customer. Accepted values: `"email"` or `"sms"`. Defaults to `"email"` if both contact methods are present.
+</ParamField>
+
+<ParamField body="metadata" type="object">
+  A set of key-value pairs you can attach for your own internal reference (e.g., loyalty card numbers, CRM IDs). Keys and values must be strings. Maximum 20 keys.
+</ParamField>
+
+<Note>
+  At least one of `email` or `phone` is required. If you provide both, the `preferred_channel` setting determines which is used by default when sending a receipt.
+</Note>
+
+## Example request
+
+```bash cURL
+curl -X POST https://api.e-receipt.com/v1/customers \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com",
+    "phone": "+15551234567",
+    "preferred_channel": "email",
+    "metadata": {
+      "crm_id": "CRM-98312",
+      "loyalty_tier": "gold"
+    }
+  }'
+```
+
+## Response
+
+A successful request returns HTTP `201 Created` with the newly created customer object.
+
+```json
+{
+  "id": "cus_9KJ2mXpLqR",
+  "name": "Jane Smith",
+  "email": "jane.smith@example.com",
+  "phone": "+15551234567",
+  "preferred_channel": "email",
+  "email_opted_in": true,
+  "sms_opted_in": true,
+  "metadata": {
+    "crm_id": "CRM-98312",
+    "loyalty_tier": "gold"
+  },
+  "created_at": "2025-03-15T09:30:00Z",
+  "updated_at": "2025-03-15T09:30:00Z"
+}
+```
+
+<Tip>
+  Store the returned `id` (e.g., `cus_9KJ2mXpLqR`) in your own database alongside your internal customer record. You will need it every time you create a receipt for this customer.
+</Tip>

@@ -1,0 +1,68 @@
+---
+title: "Configure Delivery Notifications and Alerts in E-Receipt"
+sidebarTitle: "Notifications"
+description: "Set up delivery failure alerts, daily digest emails, and team notifications to stay informed about your receipt delivery performance."
+---
+
+Staying on top of delivery issues is essential to providing a seamless customer experience — an undelivered receipt can mean a frustrated customer, a disputed charge, or a compliance gap. E-Receipt's notification system gives you and your team automated alerts the moment something goes wrong, plus daily summaries to keep you aware of overall delivery health without having to check the dashboard manually.
+
+## Delivery failure alerts
+
+Delivery failure alerts notify you immediately (or on a rolling digest) whenever a receipt fails to reach a customer, so you can take corrective action quickly.
+
+<Steps>
+  <Step title="Open Notification settings">
+    Navigate to **Settings > Notifications > Delivery Failures**.
+  </Step>
+  <Step title="Choose a notification recipient">
+    Enter the email address of the team member who should receive failure alerts. You can add multiple recipients — any team member's verified email address is eligible, regardless of their role.
+  </Step>
+  <Step title="Set the alert frequency">
+    Choose how you want to receive alerts:
+
+    | Frequency | Description |
+    |-----------|-------------|
+    | **Immediate** | An alert is sent the moment a delivery failure is detected. Best for low-volume businesses or mission-critical delivery requirements. |
+    | **Hourly digest** | Failures are batched and sent in a single summary email once per hour. Best for high-volume businesses to avoid inbox noise. |
+  </Step>
+  <Step title="Save">
+    Click **Save** to activate the alert rule.
+  </Step>
+</Steps>
+
+## Daily summary email
+
+The daily summary email gives you a high-level view of your receipt delivery performance for the previous 24 hours, delivered straight to your inbox each morning.
+
+Navigate to **Settings > Notifications** and toggle on **Daily Summary Email**. The summary includes:
+
+- **Total receipts sent** — total count of receipts issued during the day.
+- **Delivery rate** — percentage of receipts successfully delivered.
+- **Failed count** — total number of delivery failures, with a link to the detailed failure log.
+
+The daily summary is sent automatically to all team members with the **Owner** and **Admin** roles. Individual **Members** can opt in by enabling the toggle in their personal notification preferences under **Profile > Notifications**.
+
+## Webhook notifications
+
+For real-time, programmatic delivery alerts that integrate directly with your own systems or third-party tools, use E-Receipt's webhook event system instead of email notifications.
+
+Webhooks fire instantly on events such as `receipt.delivered`, `receipt.failed`, and `receipt.opened`. Configure a webhook endpoint in **Settings > Webhooks**, then filter the events you want to receive.
+
+For full details on available events and payload schemas, see [Webhook Events](/api-reference/webhooks/events).
+
+<Tip>
+  You can point a webhook URL directly at a Slack incoming webhook to receive delivery failure alerts as Slack messages. Create an incoming webhook in your Slack workspace, copy the URL, and paste it as your webhook endpoint in **Settings > Webhooks**. Filter to `receipt.failed` events only to keep your channel focused on actionable issues.
+</Tip>
+
+## Customer notifications
+
+E-Receipt can automatically follow up with customers who have not opened their receipt, reducing the chance that an important document is missed.
+
+Navigate to **Settings > Customer Notifications** to configure:
+
+- **Unopened receipt reminder** — if a customer has not opened their receipt email within **48 hours** of delivery, E-Receipt sends a single reminder. You can adjust the wait period (from 24 to 72 hours) using the slider, or turn this feature off entirely.
+- **SMS fallback** (if enabled on your plan) — if an email receipt remains unopened, a follow-up SMS can be sent to the customer's phone number, if one was provided at the time of the transaction.
+
+<Note>
+  Customer reminder emails include the same unsubscribe link as the original receipt. Customers who have already unsubscribed will not receive reminders, and their preference is automatically respected across all future communications.
+</Note>

@@ -1,0 +1,110 @@
+---
+title: "Send Digital Receipts from Your E-Commerce Store"
+sidebarTitle: "E-Commerce"
+description: "Integrate E-Receipt with Shopify, WooCommerce, or any e-commerce platform to automatically deliver branded digital receipts after every order."
+---
+
+Most e-commerce platforms send a plain, unbranded order confirmation email the moment a customer checks out. E-Receipt replaces that default notification with a fully branded digital receipt — your logo, colors, custom messaging, and itemized transaction details — delivered reliably via email or SMS. This guide walks you through connecting E-Receipt to Shopify, WooCommerce, and any custom platform via the API.
+
+## Shopify (online store)
+
+<Steps>
+  <Step title="Install the E-Receipt Shopify app">
+    In your Shopify admin, go to **Apps → App Store** and search for **E-Receipt**. Click **Add app** and complete the installation flow.
+  </Step>
+  <Step title="Connect your E-Receipt account">
+    Open the E-Receipt app from your Shopify admin sidebar. Navigate to **App settings** and either enter your E-Receipt API key or click **Sign in with E-Receipt** to link accounts via OAuth.
+  </Step>
+  <Step title="Disable Shopify's default order confirmation email">
+    In **Shopify admin → Settings → Notifications**, locate the **Order confirmation** notification and click **Disable**. This prevents customers from receiving both the Shopify default email and your branded E-Receipt.
+  </Step>
+  <Step title="Map Shopify order fields to E-Receipt receipt fields">
+    In the E-Receipt app, open **Field mapping**. Verify that the following default mappings are correct for your store, and adjust any that differ:
+
+    | Shopify field | E-Receipt field |
+    |---|---|
+    | `customer.email` | `customer.email` |
+    | `customer.phone` | `customer.phone` |
+    | `line_items[].title` | `items[].name` |
+    | `line_items[].quantity` | `items[].quantity` |
+    | `line_items[].price` | `items[].unit_price` |
+    | `total_price` | `total` |
+    | `currency` | `currency` |
+  </Step>
+  <Step title="Select your receipt template and go live">
+    Choose the template to use for online orders, then click **Activate**. E-Receipt will send a branded receipt for every new order placed in your Shopify store.
+  </Step>
+</Steps>
+
+## WooCommerce
+
+<Steps>
+  <Step title="Install the E-Receipt WooCommerce plugin">
+    From your WordPress admin dashboard, go to **Plugins → Add New** and search for **E-Receipt**. Click **Install Now**, then **Activate**.
+  </Step>
+  <Step title="Configure plugin settings">
+    Navigate to **WooCommerce → Settings → E-Receipt**. Enter your E-Receipt API key in the **API Key** field. Select your default receipt template and preferred delivery channel (email, SMS, or both).
+  </Step>
+  <Step title="Disable WooCommerce order emails">
+    Still in **WooCommerce → Settings**, open the **Emails** tab. Disable the email notifications for the order statuses you want E-Receipt to handle — typically **Processing** (paid order) and **Completed**. Leave other statuses (e.g., **Refunded**, **Cancelled**) enabled or configure them according to your workflow.
+  </Step>
+  <Step title="Save and test">
+    Click **Save changes**. Place a test order in your store to confirm that a branded E-Receipt is delivered and no WooCommerce email is sent for the same status.
+  </Step>
+</Steps>
+
+## Custom integration via API
+
+If you use a platform that does not have a native E-Receipt plugin, you can trigger receipt creation directly from your platform's order webhook. When your platform fires an `order.created` or `order.paid` event, your server receives the order payload and calls the E-Receipt API to create and send the receipt.
+
+The example below shows a Node.js Express handler that receives an order webhook and calls `POST /v1/receipts`:
+
+```javascript
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+app.post('/order-webhook', async (req, res) => {
+  const order = req.body;
+
+  const receipt = await fetch('https://api.e-receipt.com/v1/receipts', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      customer_id: order.customer_id,
+      currency: order.currency,
+      items: order.line_items.map(i => ({
+        name: i.title,
+        quantity: i.quantity,
+        unit_price: i.price,
+        total: i.quantity * i.price
+      })),
+      total: order.total_price
+    })
+  });
+
+  const receiptData = await receipt.json();
+
+  // Optionally store receiptData.id in your order record for future reference
+  res.status(200).json({ received: true });
+});
+```
+
+Replace `YOUR_API_KEY` with a key generated from **Settings → API Keys** in the E-Receipt dashboard. Refer to the [API reference](/api-reference/overview) for the full list of supported fields, including tax lines, discounts, shipping details, and custom metadata.
+
+<Tip>
+  **Prevent duplicate receipts on webhook retries.** E-commerce platforms and webhook infrastructure often retry failed deliveries, which can result in the same order firing your endpoint more than once. Pass an `"idempotency_key"` field set to the order's unique ID in your API request body to guarantee that E-Receipt creates the receipt only once, no matter how many times the webhook fires:
+
+  ```javascript
+  body: JSON.stringify({
+    idempotency_key: order.id,
+    customer_id: order.customer_id,
+    // ...rest of the fields
+  })
+  ```
+
+  If E-Receipt receives a second request with the same `idempotency_key` within 24 hours, it returns the original receipt response without creating a duplicate.
+</Tip>
