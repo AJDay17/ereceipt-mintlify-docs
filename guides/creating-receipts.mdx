@@ -4,132 +4,43 @@ sidebarTitle: "Create Receipts"
 description: "Step-by-step guide to creating digital receipts via the E-Receipt dashboard or API, covering line items, taxes, discounts, and metadata."
 ---
 
-Receipts are the core object in E-Receipt. Every transaction your business records — whether in-store, online, or through a third-party point-of-sale system — is represented as a receipt that you can issue, customize, and deliver to your customers. You can create receipts directly from the E-Receipt dashboard for manual entry, or programmatically through the API to integrate with your existing checkout and POS workflows.
+eReceipt does not ask the customer or the merchant to _do_ anything extra at checkout. Instead, receipts are created automatically by matching real card transactions to the merchant's itemized sales data. This page explains what actually happens end-to-end.
 
-## Creating a receipt from the dashboard
-
-The dashboard provides a guided form for creating receipts without writing any code. This is ideal for low-volume entry, corrections, or testing your setup before going live.
+## The flow
 
 <Steps>
-  <Step title="Navigate to Receipts">
-    In the left sidebar, click **Receipts** to open the receipts list view.
+  <Step title="Customer links a card">
+    A customer connects a credit or debit card to the eReceipt app via **Plaid**. Plaid brokers the connection so eReceipt only receives a secure token, never the card number or bank credentials.
   </Step>
-  <Step title="Start a new receipt">
-    Click the **New Receipt** button in the top-right corner of the page.
+  <Step title="Customer pays at a participating merchant">
+    The customer completes checkout as normal — tap, insert, or swipe. The cashier does not ask for an email or a phone number.
   </Step>
-  <Step title="Fill in customer information">
-    Search for an existing customer by name or email, or click **Create new customer** to add one inline. Select the currency for this transaction.
+  <Step title="Transaction event is captured">
+    Once the transaction settles on the linked card, eReceipt receives a transaction event that includes the merchant identifier, timestamp, and total.
   </Step>
-  <Step title="Add line items">
-    Click **Add Item** for each product or service. Enter the item name, quantity, unit price, and confirm the calculated line total. Repeat for every item in the transaction.
+  <Step title="Merchant sale is matched">
+    eReceipt matches the transaction to the merchant's itemized sale record for that exact time and amount, at that exact branch.
   </Step>
-  <Step title="Set totals">
-    Review the auto-calculated subtotal. Apply a discount (flat amount or percentage) and add any applicable tax rates. The total updates in real time.
-  </Step>
-  <Step title="Save or send the receipt">
-    Click **Save as Draft** to store the receipt without sending it, or click **Save & Send** to deliver it to the customer immediately via their preferred channel.
+  <Step title="Receipt is delivered to the app">
+    A fully itemized digital receipt is created and pushed into the customer's eReceipt app feed within seconds.
   </Step>
 </Steps>
 
-## Creating a receipt via the API
+## What a receipt contains
 
-For automated workflows, use the `POST https://api.e-receipt.com/v1/receipts` endpoint to create receipts programmatically. Include all line items, totals, and any metadata you want to attach for downstream reporting.
+Each receipt in the app includes:
 
-**Request**
+- **Merchant** — company name, branch, logo, phone, and address.
+- **Date and time** — timestamp of the transaction.
+- **Line items** — each item's name, quantity, unit price, subtotal, and tax.
+- **Totals** — subtotal, tax, and grand total.
+- **Payment** — card type (Visa, Mastercard, etc.), last four digits, authorization code, and transaction ID.
+- **External ID** — the merchant's POS transaction identifier, used for reconciliation.
 
-```bash
-POST https://api.e-receipt.com/v1/receipts
-Authorization: Bearer YOUR_API_KEY
-Content-Type: application/json
-```
+## Why nothing has to change at the register
 
-```json
-{
-  "customer_id": "cus_abc123",
-  "currency": "USD",
-  "items": [
-    { "name": "Coffee", "quantity": 2, "unit_price": 4.50, "total": 9.00 },
-    { "name": "Croissant", "quantity": 1, "unit_price": 3.25, "total": 3.25 }
-  ],
-  "subtotal": 12.25,
-  "tax": 1.10,
-  "discount": 0,
-  "total": 13.35,
-  "notes": "Thank you for your visit!",
-  "metadata": { "pos_transaction_id": "txn_789" }
-}
-```
-
-**Response**
-
-```json
-{
-  "id": "rcp_x7k2mn9p",
-  "status": "draft",
-  "customer_id": "cus_abc123",
-  "currency": "USD",
-  "total": 13.35,
-  "created_at": "2025-03-15T10:22:04Z"
-}
-```
-
-The receipt is created with a `status` of `"draft"` by default, meaning it has not been delivered yet. To send it, call the [send endpoint](/guides/sending-receipts) separately, or pass `"send_immediately": true` in the creation payload.
-
-## Receipt fields reference
-
-The table below describes every top-level field you can include when creating or updating a receipt.
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `customer_id` | string | Yes | The ID of the customer this receipt belongs to. |
-| `currency` | string | Yes | ISO 4217 currency code (e.g., `"USD"`, `"EUR"`, `"GBP"`). |
-| `items` | array | Yes | Ordered list of line item objects. Each item requires `name`, `quantity`, `unit_price`, and `total`. |
-| `subtotal` | number | Yes | Sum of all line item totals before tax and discount. |
-| `tax` | number | No | Total tax amount applied to the transaction. Defaults to `0`. |
-| `discount` | number | No | Total discount amount deducted from the subtotal. Defaults to `0`. |
-| `total` | number | Yes | Final amount charged. Should equal `subtotal + tax - discount`. |
-| `notes` | string | No | A short message displayed at the bottom of the receipt (e.g., a thank-you note or store policy). |
-| `template_id` | string | No | The ID of a custom template to apply. If omitted, the account default template is used. |
-| `metadata` | object | No | Arbitrary key-value pairs for your internal use (e.g., POS transaction IDs, order numbers). Not displayed on the receipt unless mapped in a template. |
-
-## Adding discounts and taxes
-
-E-Receipt supports both flat and percentage-based discounts, as well as multiple tax rates on a single receipt.
-
-**Discounts**
-
-Pass the `discount` field as a pre-calculated flat amount in the receipt currency:
-
-```json
-{
-  "subtotal": 12.25,
-  "discount": 1.23,
-  "total": 12.12
-}
-```
-
-If you want to record the discount as a percentage for display purposes, add a `discount_label` to the receipt `notes` or `metadata` (for example, `"10% loyalty discount"`). The API always stores and displays the calculated flat amount.
-
-**Multiple tax rates**
-
-To apply multiple tax rates (for example, a state tax and a local tax), use the `tax_lines` array instead of the single `tax` field:
-
-```json
-{
-  "tax_lines": [
-    { "name": "State Tax", "rate": 0.07, "amount": 0.86 },
-    { "name": "City Tax", "rate": 0.02, "amount": 0.25 }
-  ],
-  "tax": 1.11
-}
-```
-
-Each entry in `tax_lines` requires a `name`, a `rate` (as a decimal), and the pre-calculated `amount`. The top-level `tax` field should equal the sum of all `tax_lines` amounts.
+Because matching happens on the eReceipt side using the customer's linked-card token, cashiers do not need to know whether a customer uses eReceipt. There is no button to press, no app to install on the terminal, and no additional field to enter at checkout. Both sides of the transaction stay exactly as they were.
 
 <Note>
-  Receipts are created in **draft** status by default and are not delivered to the customer until you explicitly trigger a send. This gives you time to review and correct a receipt before it reaches the customer. If you want to send immediately on creation, include `"send_immediately": true` in your request body.
+  A receipt only appears if the customer has linked the specific card they are paying with. Payments on unlinked cards, cash, or store gift cards do not produce eReceipt receipts.
 </Note>
-
-<Tip>
-  Use the `template_id` field to apply a custom branded template to any receipt at creation time. You can maintain separate templates for different locations, receipt types (e.g., refunds vs. purchases), or customer segments. Retrieve your available template IDs with `GET https://api.e-receipt.com/v1/templates`. See [Customize Receipts](/guides/customizing-receipts) for full details.
-</Tip>

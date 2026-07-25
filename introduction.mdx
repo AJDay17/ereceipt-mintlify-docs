@@ -4,56 +4,67 @@ sidebarTitle: "Introduction"
 description: "E-Receipt is a cloud-based platform for creating and delivering branded digital receipts to customers via email and SMS. No paper required."
 ---
 
-E-Receipt is a cloud-based platform that enables retailers, restaurants, and e-commerce merchants to create, customize, and deliver digital receipts to their customers instantly — no paper, no printing, no hassle. Instead of handing over a paper slip that gets lost or thrown away, you send a beautifully branded receipt directly to your customer's email inbox or mobile phone. E-Receipt solves the twin problems of paper waste and poor post-purchase customer experience by making every receipt fast, trackable, and on-brand.
+eReceipt is a card-linked digital receipt platform built by TradeNexus, Corp. Customers link a payment card to the eReceipt mobile app, and every time they tap or swipe that card at a participating merchant, a fully itemized digital receipt appears in the app automatically. There is no "What's your email?" prompt at the register, no phone number to type, and no paper slip to lose.
+
+For customers, eReceipt is a place where every receipt, deal, and spending record lives in one app. For merchants, it is a way to deliver a modern checkout experience while unlocking customer analytics, targeted coupons, and reduced paper costs.
 
 ## Key features
 
-E-Receipt is built around the features modern businesses need to replace paper receipts entirely and improve the customer experience at every step.
-
 <CardGroup cols={2}>
-  <Card title="Instant Delivery" icon="bolt">
-    Receipts reach your customer's inbox or phone within seconds of a transaction being recorded — via email or SMS.
+  <Card title="Automatic Capture" icon="bolt">
+    Receipts are linked to the customer's card at the moment of payment — no data entry at the register.
   </Card>
 
-  <Card title="Branded Templates" icon="palette">
-    Design fully customized receipt templates with your logo, colors, and messaging so every receipt reinforces your brand.
+  <Card title="All Receipts in One Place" icon="folder-open">
+    Every itemized receipt from every participating merchant is organized and searchable in the mobile app.
   </Card>
 
-  <Card title="Customer Management" icon="users">
-    Maintain a searchable customer directory with purchase history, contact details, and delivery preferences all in one place.
+  <Card title="Nearby Coupons & Deals" icon="gift">
+    Customers discover deals from local merchants; merchants create and publish coupons for free.
   </Card>
 
-  <Card title="Analytics" icon="chart-bar">
-    Track open rates, delivery status, and customer engagement on every receipt you send from the E-Receipt dashboard.
+  <Card title="Expense Reporting" icon="file-spreadsheet">
+    Customers can tag, export, and share receipts for reimbursements and bookkeeping.
   </Card>
 
-  <Card title="Integrations" icon="plug">
-    Connect E-Receipt to your existing POS system, e-commerce platform, or payment processor with just a few clicks.
+  <Card title="Merchant Analytics" icon="chart-bar">
+    Merchants see customer behavior, retention, revenue trends, and lifetime value from real transaction data.
   </Card>
 
-  <Card title="REST API" icon="code">
-    Use the E-Receipt REST API to trigger receipts programmatically from any application or custom workflow you build.
+  <Card title="Fraud Reduction" icon="shield">
+    Itemized digital receipts help merchants and customers spot unrecognized charges before they become chargebacks.
   </Card>
 </CardGroup>
 
-## How E-Receipt works
+## How it works
 
-E-Receipt fits seamlessly into your existing transaction flow. When a transaction occurs — whether at a physical till, through an online checkout, or via an API call — E-Receipt instantly creates a structured receipt record. That record is populated with your merchant details, the line items from the sale, and any custom fields you've configured. E-Receipt then applies your chosen template to render a polished, branded receipt and delivers it to the customer's email address or phone number. The customer opens a clean, mobile-friendly receipt on any device, and you can see exactly when it was delivered and viewed — all in real time from the dashboard.
+<Steps>
+  <Step title="Customer pays">
+    A customer taps, swipes, or inserts their linked card at checkout — exactly like they normally would.
+  </Step>
+  <Step title="Receipt captured">
+    eReceipt automatically links the transaction to the customer's card. No email or phone number is requested at the register.
+  </Step>
+  <Step title="Instant access">
+    The itemized digital receipt appears in the customer's eReceipt app within seconds of the transaction settling.
+  </Step>
+  <Step title="Done">
+    No paper waste, no lost receipts, and no manual data entry — on either side of the counter.
+  </Step>
+</Steps>
 
-## Supported delivery methods
+## Who eReceipt is for
 
-E-Receipt supports two primary delivery channels out of the box. You can enable one or both per customer, and customers can update their own preferences through the self-service receipt portal.
+<CardGroup cols={2}>
+  <Card title="For Customers" icon="user" href="/customers/getting-started">
+    Download the eReceipt app, link a card, and every receipt from a participating merchant shows up automatically. Track spending, find coupons nearby, and export receipts for expense reports.
+  </Card>
 
-| Feature | Email | SMS |
-| --- | --- | --- |
-| Delivery speed | Seconds | Seconds |
-| Rich formatting (logo, colors, tables) | ✅ Yes | ❌ No (plain text link) |
-| Receipt link included | ✅ Yes | ✅ Yes |
-| Customer reply support | ✅ Yes | ✅ Yes |
-| Delivery status tracking | ✅ Yes | ✅ Yes |
-| Open / view tracking | ✅ Yes | ✅ Yes (link click) |
-| Cost | Included in all plans | Requires SMS add-on or qualifying plan |
+  <Card title="For Merchants" icon="store" href="/merchants/overview">
+    Offer a paperless checkout experience, publish free coupons to nearby shoppers, and get analytics on customer retention, revenue, and lifetime value.
+  </Card>
+</CardGroup>
 
 <Note>
-  To get started, sign up at [app.myereceipt.com](https://app.myereceipt.com). Your account includes a development environment at [app.dev-ereceipt.com](https://app.dev-ereceipt.com) so you can test receipts before going live.
+  Customers can download the eReceipt app from the [App Store](https://apps.apple.com/app/id6587549323) or Google Play. Merchants interested in offering eReceipt at checkout can [contact sales](https://myereceipt.com/merchant/contact).
 </Note>

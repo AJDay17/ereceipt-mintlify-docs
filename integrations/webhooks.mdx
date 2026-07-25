@@ -4,7 +4,28 @@ sidebarTitle: "Webhooks"
 description: "Configure E-Receipt webhooks to receive real-time HTTP notifications when receipts are sent, delivered, viewed, or fail to deliver."
 ---
 
-Unlike polling, which requires your systems to repeatedly ask E-Receipt for updates, webhooks push event data to your server the moment something happens. When a receipt is sent, successfully delivered, opened by a customer, or encounters a delivery failure, E-Receipt immediately sends an HTTP POST request to your registered endpoint — giving you real-time visibility and the ability to trigger downstream actions without any delay.
+Interested in offering eReceipt at checkout, or want to talk through a partnership? The eReceipt team can walk you through integration options for your payment processor and POS, timelines for going live, and how the merchant tools fit your business.
+
+## Contact form
+
+Fill out the [merchant contact form](https://myereceipt.com/merchant/contact) and our team will follow up directly.
+
+## What to include
+
+The more we know up front, the faster we can respond. If possible, include:
+
+- Your business name and rough number of locations.
+- The payment processor(s) you use today.
+- The POS system(s) you use today.
+- What you're most interested in — receipts, coupons, analytics, or all of the above.
+
+## After you reach out
+
+Our team confirms compatibility, discusses timing, and coordinates the technical steps to link your merchant identifier so card-linked transactions can be matched to your business. There is no hardware change and no new app on your terminal.
+
+<Note>
+  Merchant onboarding is a hands-on process today. There is no self-service signup — reaching out is the first step.
+</Note>
 
 ## Setting up a webhook
 
@@ -29,7 +50,7 @@ Every webhook request from E-Receipt includes an `X-EReceipt-Signature` header c
 
 The signature header format is:
 
-```
+```text
 X-EReceipt-Signature: sha256=<hex-encoded-hash>
 ```
 
@@ -95,7 +116,7 @@ Below is an example payload for the `receipt.viewed` event, which fires when a c
 **Common event types**
 
 | Event | Fired when |
-|---|---|
+| --- | --- |
 | `receipt.created` | A new receipt is successfully created |
 | `receipt.sent` | E-Receipt dispatches the receipt to the delivery provider |
 | `receipt.delivered` | The delivery provider confirms successful delivery |
@@ -111,14 +132,14 @@ For the complete event catalog including all fields for each event type, see the
 If your endpoint returns a non-2xx HTTP status code, times out, or is unreachable, E-Receipt treats the delivery as failed and automatically retries using exponential backoff. Retries follow this schedule:
 
 | Attempt | Delay after previous failure |
-|---|---|
+| --- | --- |
 | 1st retry | 1 minute |
 | 2nd retry | 5 minutes |
 | 3rd retry | 30 minutes |
 | 4th retry | 2 hours |
 | 5th retry | 8 hours |
 
-After 5 failed attempts, E-Receipt marks the event as undelivered and stops retrying. You can view and manually replay failed events from **Settings → Webhooks → [your endpoint] → Failed deliveries**.
+After 5 failed attempts, E-Receipt marks the event as undelivered and stops retrying. You can view and manually replay failed events from **Settings → Webhooks → \[your endpoint\] → Failed deliveries**.
 
 To acknowledge successful receipt of a webhook, your endpoint must return any HTTP `2xx` status code.
 

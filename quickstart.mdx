@@ -4,149 +4,67 @@ sidebarTitle: "Quickstart"
 description: "Learn how to send your first digital receipt using the E-Receipt API. From account setup to delivered receipt in under 5 minutes."
 ---
 
-By the end of this guide you'll have a live E-Receipt account, a working API key, and a digital receipt successfully delivered to a customer's email address. You'll make two API calls — one to create a customer and one to create and send a receipt — using nothing more than a terminal or your preferred HTTP client. Let's get started.
+eReceipt has two audiences with two very different starting points. Pick the guide that matches you.
+
+## For customers
+
+Get every receipt from every participating merchant into one app in under two minutes.
 
 <Steps>
-  <Step title="Create your account">
-    Sign up for a free account at [app.e-receipt.com](https://app.e-receipt.com). Once you've verified your email and logged in, navigate to **Settings > API Keys** in the left-hand sidebar. This is where you'll generate and manage the credentials your application uses to authenticate with the E-Receipt API.
+  <Step title="Download the app">
+    Install eReceipt on your phone from the [App Store](https://apps.apple.com/app/id6587549323) or Google Play.
   </Step>
-  <Step title="Get your API key">
-    On the **API Keys** page, click **Create new key**, give it a descriptive name (for example, `my-first-integration`), and click **Generate**. Copy the key immediately — for security reasons it is only shown once. Store it somewhere safe, such as an environment variable or a secrets manager.
-
-    E-Receipt issues two types of keys: `erecp_live_...` keys hit the production API, and `erecp_test_...` keys hit the sandbox at `https://sandbox.api.e-receipt.com/v1` — no real emails or SMS messages are sent in sandbox mode. Use a test key while following this guide.
-
-    You'll use your key in the `Authorization` header of every API request:
-
-    ```http
-    Authorization: Bearer erecp_test_xxxxxxxxxxxx
-    ```
-
-    Your **Merchant ID** is also displayed on this page — keep it handy, as you'll need it when creating receipts.
+  <Step title="Create an account">
+    Open the app and sign up with your email. Verify your email address to activate the account.
   </Step>
-  <Step title="Create a customer">
-    Before you can send a receipt, you need a customer record. Call `POST /v1/customers` with the customer's name and email address. E-Receipt stores this contact so you can send them receipts in the future without re-entering their details.
-
-    ```bash
-    curl -X POST https://api.e-receipt.com/v1/customers \
-      -H "Authorization: Bearer YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "name": "Jane Smith",
-        "email": "jane@example.com"
-      }'
-    ```
-
-    The response includes a `customer_id` (for example, `cus_abc123`). Copy this value — you'll use it in the next step.
+  <Step title="Link a payment card">
+    In the app, tap **Link a card** and connect the credit or debit card you use most often. Card linking is powered by Plaid, so your card credentials are never stored by eReceipt.
   </Step>
-  <Step title="Create and send a receipt">
-    Create a receipt by calling `POST /v1/receipts` with your merchant ID, the customer ID from the previous step, and the line items for the transaction. Then trigger delivery by calling `POST /v1/receipts/{id}/send`.
-
-    **Create the receipt:**
-
-    ```bash
-    curl -X POST https://api.e-receipt.com/v1/receipts \
-      -H "Authorization: Bearer YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "merchant_id": "mer_xyz789",
-        "customer_id": "cus_abc123",
-        "currency": "USD",
-        "items": [
-          { "name": "Organic Coffee Blend", "qty": 2, "price": 12.99 },
-          { "name": "Reusable Travel Mug", "qty": 1, "price": 24.95 }
-        ],
-        "total": 50.93
-      }'
-    ```
-
-    The response includes a receipt `id` (for example, `rec_def456`). Use that ID to send the receipt:
-
-    **Send the receipt:**
-
-    ```bash
-    curl -X POST https://api.e-receipt.com/v1/receipts/rec_def456/send \
-      -H "Authorization: Bearer YOUR_API_KEY"
-    ```
-
-    A `200 OK` response confirms that the receipt has been queued for delivery.
-  </Step>
-  <Step title="View the receipt">
-    Within a few seconds, Jane receives an email at `jane@example.com` containing your branded receipt. The email includes a **View Receipt** button that opens a mobile-friendly receipt page hosted by E-Receipt. You can track delivery and open status in real time from the **Receipts** tab of your dashboard. If you set up webhooks, E-Receipt will also notify your server when the receipt status changes to `sent` and then `viewed`.
+  <Step title="Pay as usual">
+    Next time you tap, swipe, or insert your linked card at a participating merchant, the itemized receipt appears in your eReceipt app automatically — no email prompt, no phone number, no paper slip needed.
   </Step>
 </Steps>
 
-## Send a receipt — language examples
-
-The code below shows the full receipt creation request in cURL, JavaScript, and Python. All three examples create the same receipt.
-
-<CodeGroup>
-
-```bash cURL
-curl -X POST https://api.e-receipt.com/v1/receipts \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "merchant_id": "mer_xyz789",
-    "customer_id": "cus_abc123",
-    "currency": "USD",
-    "items": [
-      { "name": "Organic Coffee Blend", "qty": 2, "price": 12.99 },
-      { "name": "Reusable Travel Mug", "qty": 1, "price": 24.95 }
-    ],
-    "total": 50.93
-  }'
-```
-
-```javascript JavaScript
-const response = await fetch("https://api.e-receipt.com/v1/receipts", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer YOUR_API_KEY",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    merchant_id: "mer_xyz789",
-    customer_id: "cus_abc123",
-    currency: "USD",
-    items: [
-      { name: "Organic Coffee Blend", qty: 2, price: 12.99 },
-      { name: "Reusable Travel Mug", qty: 1, price: 24.95 },
-    ],
-    total: 50.93,
-  }),
-});
-
-const receipt = await response.json();
-console.log("Created receipt:", receipt.id);
-```
-
-```python Python
-import requests
-
-response = requests.post(
-    "https://api.e-receipt.com/v1/receipts",
-    headers={
-        "Authorization": "Bearer YOUR_API_KEY",
-        "Content-Type": "application/json",
-    },
-    json={
-        "merchant_id": "mer_xyz789",
-        "customer_id": "cus_abc123",
-        "currency": "USD",
-        "items": [
-            {"name": "Organic Coffee Blend", "qty": 2, "price": 12.99},
-            {"name": "Reusable Travel Mug", "qty": 1, "price": 24.95},
-        ],
-        "total": 50.93,
-    },
-)
-
-receipt = response.json()
-print(f"Created receipt: {receipt['id']}")
-```
-
-</CodeGroup>
-
 <Tip>
-  This quickstart covers the most common parameters. See the [API Reference](/api-reference/overview) for the full list of fields you can include on a receipt, including tax breakdowns, discounts, custom metadata, and template overrides.
+  While you're in the app, browse the **Coupons** tab to discover deals from merchants near you, and try the **Expense Reporting** tools to tag and export receipts for reimbursements.
 </Tip>
+
+## For merchants
+
+Offer paperless checkout and unlock customer analytics and coupon tools.
+
+<Steps>
+  <Step title="Contact sales">
+    Reach out through the [merchant contact form](https://myereceipt.com/merchant/contact). Our team will confirm integration options for your payment processor and POS.
+  </Step>
+  <Step title="Connect your checkout">
+    Work with our team to link your merchant identifier so card-linked transactions can be matched to your locations. Setup does not require a hardware change or a new app on your terminal.
+  </Step>
+  <Step title="Get access to the merchant tools">
+    Once you're live, you can create free coupons, publish deals to nearby customers, and view analytics on customer retention, revenue trends, and lifetime value.
+  </Step>
+</Steps>
+
+<Note>
+  Merchant onboarding is currently handled through our team. If you need a specific processor or POS supported, mention it in the contact form.
+</Note>
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Core concepts" icon="book" href="/concepts">
+    Learn how card-linking, merchants, and receipts fit together.
+  </Card>
+
+  <Card title="Customer features" icon="user" href="/customers/receipts">
+    Deep dive into receipts, coupons, and expense reporting in the app.
+  </Card>
+
+  <Card title="Merchant features" icon="store" href="/merchants/overview">
+    See what analytics, coupons, and receipts look like on the merchant side.
+  </Card>
+
+  <Card title="FAQ" icon="circle-question" href="/help/faq">
+    Answers to the most common questions from customers and merchants.
+  </Card>
+</CardGroup>

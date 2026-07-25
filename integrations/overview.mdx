@@ -4,53 +4,34 @@ sidebarTitle: "Overview"
 description: "Connect E-Receipt to your point-of-sale system, e-commerce platform, or custom application using native integrations or the REST API."
 ---
 
-E-Receipt is designed to fit into your existing tech stack with minimal friction. Whether you run a brick-and-mortar store on a popular POS system, operate an online shop through an e-commerce platform, or build a fully custom checkout experience, E-Receipt provides a path to automated, branded digital receipts without rebuilding your workflows from scratch.
+Once a merchant is live on eReceipt, they get access to a set of tools that would otherwise require separate loyalty, coupon, and analytics products. All of them are powered by the same card-linked transaction data.
 
 <CardGroup cols={2}>
-  <Card title="POS Systems" icon="cash-register" href="/integrations/pos-systems">
-    Connect Square, Shopify POS, Lightspeed, Toast, and Clover to send receipts automatically at checkout.
+  <Card title="Digital Receipts at Checkout" icon="receipt" href="/integrations/pos-systems">
+    Customers with the app get an itemized digital receipt automatically. No hardware change, no cashier prompt.
   </Card>
-  <Card title="E-Commerce" icon="shopping-cart" href="/integrations/ecommerce">
-    Integrate with Shopify, WooCommerce, or any custom storefront to replace default order emails with branded receipts.
+
+  <Card title="Free Coupons" icon="gift" href="/integrations/ecommerce">
+    Publish coupons that reach nearby customers and existing favorites of your business, for free.
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
-    Receive real-time HTTP notifications when receipts are sent, delivered, viewed, or fail delivery.
+
+  <Card title="Customer Analytics" icon="chart-bar" href="/guides/analytics">
+    Retention, revenue trends, lifetime value, and satisfaction — from real itemized transactions.
   </Card>
-  <Card title="REST API" icon="code" href="/api-reference/overview">
-    Use the full E-Receipt API for programmatic control over receipt creation, delivery, and management on any platform.
+
+  <Card title="Reduced Operating Costs" icon="leaf" href="/integrations/webhooks">
+    Fewer paper receipts means less thermal paper, less printer maintenance, and less environmental waste.
   </Card>
 </CardGroup>
 
-## Integration approaches
+## How eReceipt fits your checkout
 
-E-Receipt offers three distinct ways to connect your systems, each suited to a different level of technical investment and customization need.
+eReceipt matches transactions to your business on the eReceipt side, using the customer's linked payment card and your merchant identifier. There is:
 
-**1. Native integrations**
+- **No new hardware** — you keep your existing terminals, POS, and payment processor.
+- **No cashier training** — the checkout script does not change; cashiers do not ask for email or phone.
+- **No app on the terminal** — nothing to install, update, or reboot.
 
-Native integrations are pre-built connectors that link E-Receipt directly to a supported platform — no code required. You authenticate once through an OAuth flow or API key, configure your preferences in the E-Receipt dashboard, and receipts begin flowing automatically. Native integrations are the fastest way to go live if your platform is on the supported list.
+## Getting started
 
-**2. Webhooks**
-
-Webhooks let E-Receipt push real-time event notifications to a URL you control. When a receipt is sent, delivered, opened, or encounters an error, E-Receipt sends an HTTP POST to your endpoint with a structured JSON payload. Use webhooks to trigger downstream actions in your own systems — updating a CRM, logging to a data warehouse, or alerting your support team — without polling the API.
-
-**3. REST API**
-
-The E-Receipt REST API gives you full programmatic control over every resource in the platform: customers, receipts, templates, delivery channels, and more. Use the API when you need a custom integration that goes beyond what a native connector or webhook provides — for example, embedding receipt creation inside a proprietary order management system or a mobile app.
-
-## Choosing the right approach
-
-Use the table below to quickly identify the best fit for your situation.
-
-| Scenario | Recommended approach |
-|---|---|
-| You use a supported POS or e-commerce platform | Native integration |
-| You need receipts triggered by your own internal systems | REST API |
-| You want to react to receipt events in real time (e.g., sync delivery status) | Webhooks |
-| You use an unsupported or custom-built platform | REST API |
-| You want both automated sending and event-driven sync | Native integration + Webhooks |
-
-In practice, many businesses combine approaches: a native integration handles receipt creation at checkout while webhooks keep a CRM or analytics tool in sync with delivery and engagement events.
-
-<Tip>
-  Before connecting any live system, use the E-Receipt **sandbox environment** to send test receipts and verify your configuration end-to-end. Sandbox events are fully isolated from production data, so you can experiment freely without affecting real customers. Switch between environments using the toggle in the top-right corner of the dashboard.
-</Tip>
+Merchant onboarding is currently handled by our team. [Contact sales](https://myereceipt.com/merchant/contact) to discuss processor and POS compatibility, and to begin the setup.

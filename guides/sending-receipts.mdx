@@ -4,162 +4,56 @@ sidebarTitle: "Send Receipts"
 description: "How to deliver E-Receipt digital receipts to customers via email or SMS, including scheduling sends and handling delivery failures."
 ---
 
-E-Receipt delivers digital receipts to your customers through two channels: email and SMS. Email sends a fully branded HTML receipt directly to the customer's inbox, while SMS delivers a short message with a link to an online receipt viewer. You choose the channel at send time, or let the customer's saved delivery preference decide automatically. Both channels support immediate sending, scheduled delivery, and full delivery status tracking.
+Card linking is what turns eReceipt from an app that stores receipts into an app that captures them automatically. This page explains what happens during the linking flow, what data eReceipt sees, and what happens if a customer replaces or removes a card.
 
-## Send a receipt immediately
-
-Once a receipt is in draft status, you can send it with a single action from the dashboard or a single API call.
-
-**From the dashboard:**
+## Linking a card
 
 <Steps>
-  <Step title="Open the receipt">
-    Navigate to **Receipts** and click on the receipt you want to deliver.
+  <Step title="Start card linking in the app">
+    In the eReceipt app, go to **Settings → Linked cards** and tap **Link a card**.
   </Step>
-  <Step title="Click Send">
-    Click the **Send** button in the top-right corner of the receipt detail page.
+  <Step title="Choose your bank in Plaid">
+    eReceipt hands off to **Plaid**, the same service used by apps like Venmo, Robinhood, and Chime. Search for your bank and sign in with your bank credentials.
   </Step>
-  <Step title="Choose a delivery channel">
-    Select **Email** or **SMS** from the channel picker. If the customer has a preferred channel saved, it will be pre-selected. Click **Confirm Send**.
+  <Step title="Approve the connection">
+    Confirm the account and card you want to link. Plaid returns a secure token to eReceipt. Your bank credentials are never seen or stored by eReceipt.
+  </Step>
+  <Step title="You're done">
+    From this moment on, transactions on the linked card at participating merchants generate receipts automatically in your eReceipt feed.
   </Step>
 </Steps>
 
-**Via the API:**
+## What eReceipt sees — and what it doesn't
 
-Send a `POST` request to the send endpoint, specifying the delivery channel in the request body.
+| eReceipt sees | eReceipt does **not** see |
+| --- | --- |
+| A secure token that identifies the linked card | Your bank username or password |
+| Transaction merchant, amount, and timestamp on the linked card | Your full card number |
+| Which linked card was used for a given transaction | Your full account or routing number |
 
-```bash
-POST https://api.e-receipt.com/v1/receipts/{id}/send
-Authorization: Bearer YOUR_API_KEY
-Content-Type: application/json
-```
+All bank authentication is handled by Plaid; eReceipt never receives credentials.
 
-```json
-{
-  "channel": "email"
-}
-```
+## Multiple cards
 
-Or to send via SMS:
+Customers can link more than one card. Every linked card independently produces receipts, and each receipt records which card was used (card type \+ last four digits).
 
-```json
-{
-  "channel": "sms"
-}
-```
+## Removing or replacing a card
 
-**Example response:**
+- **Remove a card** — Go to **Settings → Linked cards** and tap **Remove**. Historical receipts stay in your feed, but new transactions on that card will no longer be captured.
+- **Card reissued or replaced** — If your bank issues a new card number (for example, after loss or fraud), re-link the new card. eReceipt will resume capturing receipts from the next transaction.
 
-```json
-{
-  "receipt_id": "rcp_x7k2mn9p",
-  "channel": "email",
-  "delivery_status": "queued",
-  "queued_at": "2025-03-15T10:25:00Z"
-}
-```
+## OAuth return paths
 
-The `delivery_status` of `"queued"` confirms that the receipt has been accepted and handed off to the delivery pipeline. It will move through further status states as it progresses toward the customer.
+During Plaid linking, some banks require an OAuth redirect that returns control to the eReceipt app. That redirect uses one of these paths depending on the app variant:
 
-## Delivery channels
+- Production app → `myereceipt.com/plaid-oauth/prod`
+- Preview build → `myereceipt.com/plaid-oauth/preview`
+- Development build → `myereceipt.com/plaid-oauth/dev`
 
-<Tabs>
-  <Tab title="Email">
-    E-Receipt sends email receipts as fully rendered **HTML emails** built from your active template. The email is compatible with all major email clients, including Gmail, Outlook, Apple Mail, and mobile clients.
+You should never need to visit these URLs manually — the app opens them automatically.
 
-    **Subject line:** The default subject line is `"Your receipt from [Merchant Name]"`. You can customize it in **Settings > Email** or override it per send by passing `"subject"` in the send request body:
+<Note>
+  If a Plaid OAuth redirect ever fails to reopen the app, the same URL renders a fallback page in your browser that finishes the linking flow.
+</Note>
 
-    ```json
-    {
-      "channel": "email",
-      "subject": "Thanks for stopping by — here's your receipt"
-    }
-    ```
-
-    **From name:** Set your preferred sender name in **Settings > Email**. This is the name customers see in their inbox (e.g., `"Maple Street Café"`). The reply-to address can also be configured to route customer replies to your support inbox.
-
-    **Content:** The email body mirrors your receipt template exactly, including your logo, brand colors, line items table, totals, and footer notes.
-  </Tab>
-  <Tab title="SMS">
-    E-Receipt sends SMS receipts as a short text message containing a secure, shortened link to an online receipt viewer. The full branded receipt renders in the customer's mobile browser when they tap the link.
-
-    **Character limit:** The SMS message body is kept under 160 characters to avoid multi-part message splitting. The default message format is:
-
-    ```
-    Your receipt from [Merchant Name]: https://rcpt.io/r/abc123
-    ```
-
-    You can customize the message prefix in **Settings > SMS**.
-
-    **Short link:** Every SMS receipt includes a unique short link that tracks whether the customer has viewed the receipt. Links expire after 12 months but the receipt remains accessible in the customer's profile.
-
-    **Opt-in requirement:** You may only send SMS receipts to customers who have explicitly opted in to SMS communications from your business. E-Receipt enforces this automatically — if a customer's `sms_opted_in` field is `false`, the send request will return a `422` error rather than deliver the message.
-  </Tab>
-</Tabs>
-
-## Scheduling a send
-
-To deliver a receipt at a future date and time, add the `send_at` field to your send request. The value must be an ISO 8601 UTC timestamp.
-
-```bash
-POST https://api.e-receipt.com/v1/receipts/{id}/send
-Authorization: Bearer YOUR_API_KEY
-Content-Type: application/json
-```
-
-```json
-{
-  "channel": "email",
-  "send_at": "2025-03-15T14:00:00Z"
-}
-```
-
-The response will include `"delivery_status": "scheduled"` and a `scheduled_for` timestamp confirming the queued send time. You can cancel a scheduled send by calling `DELETE https://api.e-receipt.com/v1/receipts/{id}/send` before the scheduled time.
-
-## Delivery status tracking
-
-E-Receipt tracks each receipt through the full delivery lifecycle. The `delivery_status` field on a receipt object reflects the most recent state.
-
-| Status | Description |
-|---|---|
-| `queued` | The send request was accepted and the message is waiting to be dispatched. |
-| `sent` | The message has been handed off to the email or SMS carrier. |
-| `delivered` | The carrier confirmed successful delivery to the recipient's inbox or device. |
-| `viewed` | The customer opened the email or clicked the SMS receipt link. |
-| `failed` | Delivery could not be completed. Check the `failure_reason` field for details. |
-
-To check the current delivery status of a receipt, call `GET https://api.e-receipt.com/v1/receipts/{id}` and read the `delivery_status` field:
-
-```bash
-GET https://api.e-receipt.com/v1/receipts/rcp_x7k2mn9p
-Authorization: Bearer YOUR_API_KEY
-```
-
-```json
-{
-  "id": "rcp_x7k2mn9p",
-  "delivery_status": "delivered",
-  "sent_at": "2025-03-15T10:25:03Z",
-  "delivered_at": "2025-03-15T10:25:09Z",
-  "first_viewed_at": null
-}
-```
-
-## Handling failures
-
-When a delivery attempt fails, E-Receipt sets `delivery_status` to `"failed"` and populates the `failure_reason` field with a machine-readable code. Common failure reasons include:
-
-- **`invalid_email`** — The email address on the customer profile is malformed or the domain does not exist.
-- **`email_bounced`** — The receiving mail server rejected the message (hard bounce). This often indicates the address no longer exists.
-- **`customer_unsubscribed`** — The customer clicked the unsubscribe link in a previous email and has opted out of all email communications.
-- **`sms_opt_out`** — The customer replied STOP to a previous SMS, revoking their consent.
-- **`invalid_phone`** — The phone number on the customer profile is not a valid mobile number for SMS delivery.
-
-**Retrying a failed receipt:**
-
-- **Dashboard:** Open the receipt, review the failure reason displayed in the delivery status banner, correct the customer's contact details if needed, and click **Resend**.
-- **API:** Fix the customer's contact information via `PATCH https://api.e-receipt.com/v1/customers/{id}`, then call `POST https://api.e-receipt.com/v1/receipts/{id}/send` again with the desired channel.
-
-<Warning>
-  SMS delivery is subject to **opt-in compliance requirements** under regulations including TCPA (United States), CASL (Canada), and GDPR (European Union). You must obtain explicit, documented consent from customers before sending them SMS receipts. E-Receipt blocks SMS sends to any customer whose `sms_opted_in` flag is `false`, but it is your responsibility to collect and record consent through a compliant mechanism before setting that flag to `true`. Failure to comply with applicable regulations may result in significant legal penalties.
-</Warning>
+{/* removed stale email/SMS API content — eReceipt does not send receipts by email or SMS. */}

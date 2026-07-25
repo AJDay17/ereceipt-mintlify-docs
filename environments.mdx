@@ -4,29 +4,29 @@ sidebarTitle: "Environments"
 description: "Reference for E-Receipt production and development environments, including dashboard and API base URLs for each."
 ---
 
-E-Receipt provides two isolated environments so you can build and test integrations safely before sending real receipts to customers. Each environment has its own dashboard and API base URL, and credentials are not shared between them.
+Most people using eReceipt only ever interact with the **production** environment — the live mobile app and the public website. This page documents the environments that exist and where each is accessed, in case a merchant or partner needs to reference them.
 
-## Environment URLs
+## Public surfaces
 
-| Environment | Dashboard | API base URL |
+| Surface | URL |
+| --- | --- |
+| Marketing site | [https://myereceipt.com](https://myereceipt.com) |
+| Documentation | [https://docs.myereceipt.com](https://docs.myereceipt.com) |
+| iOS app | [App Store](https://apps.apple.com/app/id6587549323) |
+| Android app | Google Play |
+
+## Mobile app build variants
+
+The eReceipt mobile app ships as three separate iOS bundle identifiers so internal and external testing never mix with production accounts. Each variant has its own Plaid OAuth redirect path.
+
+| Variant | iOS bundle ID | Plaid OAuth path |
 | --- | --- | --- |
-| Production | `https://app.myereceipt.com` | `https://api.myereceipt.com` |
-| Development | `https://app.dev-ereceipt.com` | `https://api.dev-ereceipt.com` |
+| Production | `com.myereceipt.ereceipt` | `/plaid-oauth/prod` |
+| Preview | `com.myereceipt.ereceipt.preview` | `/plaid-oauth/preview` |
+| Development | `com.myereceipt.ereceipt.dev` | `/plaid-oauth/dev` |
 
-## Production
-
-Use the production environment for live traffic. Receipts created here are delivered to real customers by email or SMS, and all usage counts toward your billing plan.
-
-- **Dashboard:** [app.myereceipt.com](https://app.myereceipt.com)
-- **API base URL:** `https://api.myereceipt.com`
-
-## Development
-
-Use the development environment to build and test integrations. Receipts created here are not delivered to real customers and do not count toward billing.
-
-- **Dashboard:** [app.dev-ereceipt.com](https://app.dev-ereceipt.com)
-- **API base URL:** `https://api.dev-ereceipt.com`
+All three variants use the same universal-link fallback page at [https://myereceipt.com/plaid-oauth/…](https://myereceipt.com/plaid-oauth/prod) so a linked card can complete OAuth even if the app is not installed.
 
 <Note>
-  API keys are environment-specific. A key issued in development will not authenticate against the production API, and vice versa. Always confirm which environment your keys belong to before going live.
+  Only the **production** variant is available in the App Store and Google Play. Preview and development builds are for the eReceipt engineering and QA teams.
 </Note>

@@ -4,59 +4,90 @@ sidebarTitle: "Concepts"
 description: "Understand the key objects and workflows in E-Receipt: receipts, customers, templates, merchants, and delivery channels."
 ---
 
-E-Receipt is built around a small set of core objects that work together to move a transaction from your system to your customer's inbox or phone. Understanding these objects — and how they relate to one another — will help you integrate the API faster, design your data model effectively, and debug issues when they arise. Every API call you make either creates, reads, updates, or connects one of these objects.
+eReceipt connects three things: a **customer**, the **payment card** they linked, and the **merchant** where that card was used. When a payment on a linked card is processed at a participating merchant, eReceipt matches the transaction and delivers an itemized digital **receipt** into the customer's mobile app.
 
-## Receipt
-
-The receipt is the primary object in E-Receipt. It represents a single transaction and contains everything a customer needs to understand what they purchased: your merchant information, an ordered list of line items, subtotals, tax, discounts, and the grand total. You can also attach free-form metadata to a receipt for your own internal reference (for example, an order ID from your own system).
-
-Every receipt moves through a defined lifecycle captured in its `status` field:
-
-| Status | Meaning |
-|---|---|
-| `draft` | The receipt has been created but not yet sent. You can still edit it. |
-| `queued` | The send request has been accepted and the receipt is waiting to be dispatched. |
-| `sent` | The receipt has been dispatched to the delivery channel and is on its way to the customer. |
-| `delivered` | The delivery provider has confirmed the receipt reached the customer's inbox or device. |
-| `viewed` | The customer has opened the receipt link. |
-| `failed` | Delivery was attempted but failed — for example, due to an invalid email address. |
-
-A receipt is always linked to exactly one **Customer** and one **Merchant**, and it is rendered using a **Template**.
+Understanding the objects below will help you talk about the platform accurately whether you're onboarding customers or supporting merchants.
 
 ## Customer
 
-A customer is a person who receives receipts from you. Each customer record stores at minimum a name and at least one contact method — an email address, a phone number, or both. E-Receipt maintains a purchase history for each customer, so you can look up all receipts sent to a given individual at any time.
+A customer is an individual using the eReceipt mobile app. Customers sign up with an email, link one or more payment cards, and receive digital receipts automatically from any participating merchant they pay.
 
-When you create a customer via `POST /v1/customers`, E-Receipt assigns them a unique `customer_id`. You reference this ID whenever you create a receipt, so you never need to re-enter the customer's contact details. Customers can also manage their own delivery preferences — for example, switching from email to SMS — through the hosted customer portal.
+Customers can:
+
+- View every itemized receipt in a single feed.
+- Search receipts by merchant, date, or item.
+- Tag receipts for expense reporting and export them.
+- Browse coupons and deals from nearby merchants.
+- Save favorite merchants and refer friends.
+
+## Linked card
+
+A linked card is the credit or debit card a customer has connected to their eReceipt account. Card linking is powered by **Plaid** — customers authenticate with their bank, and eReceipt receives a secure token used only to match transactions. Card numbers and login credentials are never stored by eReceipt.
+
+Card linking is what makes receipt capture automatic. Without a linked card, the cashier would need to ask for an email or phone number the same way they do today.
 
 ## Merchant
 
-Your merchant record represents your business within E-Receipt. It holds your business name, logo, brand colors, default currency, and timezone. These settings are automatically applied to every receipt you create, so your branding is always consistent without any extra work per transaction.
+A merchant is a business that has enabled eReceipt at checkout. When a linked card is used at a merchant location, eReceipt matches the transaction to that merchant and creates a receipt.
 
-You can have more than one merchant account — useful if you operate multiple brands or locations — and each merchant has its own set of API keys, templates, and customer records. Your merchant ID (`merchant_id`) is required on every receipt creation request.
+Merchants can also have multiple **branches** (physical locations). Each receipt records which specific branch produced it, so both customers and merchants can see exactly where a purchase happened.
 
-## Template
+## Receipt
 
-A template defines the visual layout of your receipts. It controls which sections appear (for example, a loyalty points block or a return policy footer), how your logo and colors are applied, and what custom copy is shown in the header and footer. Every merchant has a default template that is applied automatically, but you can create multiple templates for different receipt types (for example, a standard purchase receipt versus a refund receipt) and specify which to use per request.
+A receipt is the itemized record of a single transaction. Every receipt includes:
 
-Templates are linked to a single merchant and can be managed from **Settings > Templates** in the dashboard or via the `/v1/templates` API endpoints. When you update a template, all future receipts use the new design immediately — previously sent receipts are not affected.
+- Merchant name, branch, and location.
+- Date and time of the transaction.
+- Line items with quantity, unit price, and tax.
+- Subtotal, tax, and total.
+- Payment method used (card type and last four digits).
+- Any authorization or transaction identifiers passed from the merchant's POS.
 
-## Delivery Channel
+Receipts appear in the customer's app as soon as the transaction is processed and matched.
 
-A delivery channel is the method by which a receipt reaches a customer: **email** or **SMS**. The channel is configured either on the customer record (as their preferred default) or explicitly on each `/send` request, letting you override the default when needed.
+## Coupon
 
-Email delivery produces a fully rendered HTML receipt and supports open tracking. SMS delivery sends a short message containing a link to a hosted receipt page, making it ideal for customers who prefer not to share an email address. Both channels provide delivery status updates via webhooks.
+Coupons are deals published by merchants directly inside the eReceipt app. Customers discover them in several ways:
 
-## Webhook
+- **Nearby** — deals from merchants around the customer's current location.
+- **Affiliate** — deals from partner brands.
+- **Favorites** — deals from merchants a customer has saved.
+- **Referral** — rewards for inviting new customers.
 
-A webhook is an HTTP callback that E-Receipt sends to a URL you configure whenever a receipt's status changes. For example, you can register a webhook to be notified the moment a receipt is delivered (`receipt.sent`) or when a customer views it (`receipt.viewed`). This lets you build real-time workflows without polling the API — for instance, triggering a loyalty points award as soon as a customer views their receipt.
+Merchants can create coupons for free from the merchant tools.
 
-You configure webhook endpoints from **Settings > Webhooks** in the dashboard or via `POST /v1/webhooks`. Every webhook payload is signed with a secret so you can verify it came from E-Receipt.
+## Expense reporting
 
-## How the objects fit together
+Customers who use eReceipt for work can tag receipts, categorize them, and export them for reimbursement. This replaces the common "camera roll full of blurry paper receipts" workflow with a structured export.
 
-When you create a receipt, E-Receipt links it to a Customer and applies your Template, then delivers it via the configured channel. In practical terms: your `POST /v1/receipts` request provides the `merchant_id`, `customer_id`, and line items; E-Receipt resolves your merchant's default (or specified) template; and your subsequent `POST /v1/receipts/{id}/send` call dispatches it through the customer's preferred or specified delivery channel. Webhooks fire at each status transition so your system stays in sync.
+## Merchant analytics
 
-<Info>
-  The receipt lifecycle always flows in one direction: `draft` → `queued` → `sent` → `delivered` → `viewed` (or `failed`). You can edit a receipt while it is in `draft` status, but once you call `/send` the receipt is locked and a new version must be created if changes are needed. If a receipt reaches `failed` status, you can retry delivery by calling `/send` again after correcting the underlying issue (for example, updating the customer's email address).
-</Info>
+Merchants who offer eReceipt at checkout get access to analytics that would be impossible to generate from anonymous card swipes alone, including:
+
+- Total, new, and lost customers over time.
+- Retention rates and customer lifetime value.
+- Revenue trends and campaign impact.
+- Visit and purchase frequency.
+- Customer satisfaction scores.
+
+These insights come from real, itemized transaction data — not from surveys or scanned paper.
+
+## How it fits together
+
+<Steps>
+  <Step title="Customer links a card">
+    In the eReceipt app, the customer connects a payment card via Plaid.
+  </Step>
+  <Step title="Customer pays at a merchant">
+    The customer uses the linked card at a participating merchant. Nothing about the checkout experience changes for the customer or the cashier.
+  </Step>
+  <Step title="Transaction is matched">
+    eReceipt matches the transaction to both the customer's linked card and the merchant's branch.
+  </Step>
+  <Step title="Receipt appears in the app">
+    An itemized receipt is created and delivered to the customer's app feed. The merchant simultaneously gets analytics on that visit.
+  </Step>
+  <Step title="Coupons and reporting close the loop">
+    The customer can act on coupons from that merchant, and merchants can use the aggregated insights to guide future campaigns.
+  </Step>
+</Steps>
