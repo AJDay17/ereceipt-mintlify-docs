@@ -18,7 +18,8 @@
             "pages": [
               "introduction",
               "quickstart",
-              "concepts"
+              "concepts",
+              "environments"
             ]
           },
           {

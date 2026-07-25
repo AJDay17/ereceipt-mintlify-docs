@@ -1,0 +1,32 @@
+---
+title: "E-Receipt Environments: Production and Development URLs"
+sidebarTitle: "Environments"
+description: "Reference for E-Receipt production and development environments, including dashboard and API base URLs for each."
+---
+
+E-Receipt provides two isolated environments so you can build and test integrations safely before sending real receipts to customers. Each environment has its own dashboard and API base URL, and credentials are not shared between them.
+
+## Environment URLs
+
+| Environment | Dashboard | API base URL |
+| --- | --- | --- |
+| Production | `https://app.myereceipt.com` | `https://api.myereceipt.com` |
+| Development | `https://app.dev-ereceipt.com` | `https://api.dev-ereceipt.com` |
+
+## Production
+
+Use the production environment for live traffic. Receipts created here are delivered to real customers by email or SMS, and all usage counts toward your billing plan.
+
+- **Dashboard:** [app.myereceipt.com](https://app.myereceipt.com)
+- **API base URL:** `https://api.myereceipt.com`
+
+## Development
+
+Use the development environment to build and test integrations. Receipts created here are not delivered to real customers and do not count toward billing.
+
+- **Dashboard:** [app.dev-ereceipt.com](https://app.dev-ereceipt.com)
+- **API base URL:** `https://api.dev-ereceipt.com`
+
+<Note>
+  API keys are environment-specific. A key issued in development will not authenticate against the production API, and vice versa. Always confirm which environment your keys belong to before going live.
+</Note>
