@@ -1,7 +1,7 @@
 ---
-title: "GET /receipts — List All Receipts"
+title: "List and Filter Receipts with the E-Receipt REST API"
 sidebarTitle: "List Receipts"
-description: "GET /v1/receipts — Returns a paginated list of receipts. Filter by customer, status, date range, or delivery channel."
+description: "Retrieve a paginated list of receipts across your account. Filter by customer, delivery status, or date range to find exactly what you need."
 ---
 
 List and filter receipts across your entire account for reporting, auditing, or bulk operations. You can narrow results by customer, delivery status, or date range, and page through large result sets using the `page` and `per_page` parameters. Results are returned in reverse chronological order — most recently created first.
@@ -19,7 +19,7 @@ GET https://api.e-receipt.com/v1/receipts
 </ParamField>
 
 <ParamField query="status" type="string">
-  Filter receipts by their current delivery status. Accepted values: `draft`, `sent`, `delivered`, `viewed`, `failed`.
+  Filter receipts by their current status. Accepted values: `draft`, `queued`, `sent`, `delivered`, `viewed`, `failed`.
 </ParamField>
 
 <ParamField query="from" type="string">
@@ -40,10 +40,37 @@ GET https://api.e-receipt.com/v1/receipts
 
 ## Example request
 
+<CodeGroup>
+
 ```bash cURL
 curl "https://api.e-receipt.com/v1/receipts?customer_id=cus_9KJ2mXpLqR&status=delivered&from=2025-01-01&to=2025-03-31&page=1&per_page=20" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
+
+```javascript JavaScript
+const params = new URLSearchParams({
+  customer_id: "cus_9KJ2mXpLqR",
+  status: "delivered",
+  from: "2025-01-01",
+  to: "2025-03-31",
+  page: "1",
+  per_page: "20",
+});
+
+const response = await fetch(
+  `https://api.e-receipt.com/v1/receipts?${params}`,
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const { data, meta } = await response.json();
+console.log(`${meta.total} receipts found across ${meta.total_pages} pages`);
+```
+
+</CodeGroup>
 
 ## Response
 
@@ -98,6 +125,34 @@ A successful request returns HTTP `200 OK` with a paginated envelope containing 
   }
 }
 ```
+
+## Response fields
+
+<ResponseField name="data" type="array">
+  Array of receipt objects matching your query. Each object contains the full receipt representation. See [Retrieve a Receipt](/api-reference/receipts/retrieve) for a description of every receipt field.
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the current result set.
+
+  <Expandable title="meta object fields">
+    <ResponseField name="total" type="integer">
+      Total number of receipts matching your query across all pages.
+    </ResponseField>
+
+    <ResponseField name="page" type="integer">
+      The current page number returned.
+    </ResponseField>
+
+    <ResponseField name="per_page" type="integer">
+      Number of receipts returned per page.
+    </ResponseField>
+
+    <ResponseField name="total_pages" type="integer">
+      Total number of pages available for the current query.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 <Tip>
   To retrieve all receipts for a specific date range across all customers, omit `customer_id` and use only the `from` and `to` parameters. This is useful for end-of-day or end-of-month reconciliation reports.

@@ -1,14 +1,14 @@
 ---
-title: "GET /customers — List Customer Profiles"
+title: "List and Filter Customer Profiles — GET /v1/customers"
 sidebarTitle: "List Customers"
-description: "GET /v1/customers — Returns a paginated list of customer profiles. Filter by email, phone, or opt-in status."
+description: "Retrieve a paginated list of all customer profiles in your E-Receipt account. Filter by email, phone number, or email and SMS opt-in status."
 ---
 
 List all customer profiles in your account for CRM synchronization, bulk operations, or compliance reporting. Filter by contact details or opt-in status to target specific segments, and page through large datasets using the `page` and `per_page` parameters. Results are returned in reverse chronological order — most recently created first.
 
 ## Endpoint
 
-```
+```http
 GET https://api.e-receipt.com/v1/customers
 ```
 
@@ -88,6 +88,70 @@ A successful request returns HTTP `200 OK` with a paginated envelope containing 
   }
 }
 ```
+
+## Response fields
+
+Each object in the `data` array is a full customer profile. The `meta` object describes pagination state.
+
+<ResponseField name="data" type="array">
+  Array of customer profile objects matching your filter criteria. Each object contains the same fields as a single customer retrieved via `GET /v1/customers/{id}`.
+</ResponseField>
+
+<ResponseField name="data[].id" type="string">
+  Unique identifier for the customer, prefixed with `cus_`.
+</ResponseField>
+
+<ResponseField name="data[].name" type="string">
+  The customer's full name.
+</ResponseField>
+
+<ResponseField name="data[].email" type="string">
+  The customer's email address. `null` if not on record.
+</ResponseField>
+
+<ResponseField name="data[].phone" type="string">
+  The customer's phone number in E.164 format. `null` if not on record.
+</ResponseField>
+
+<ResponseField name="data[].preferred_channel" type="string">
+  The default delivery channel — either `"email"` or `"sms"`.
+</ResponseField>
+
+<ResponseField name="data[].email_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by email.
+</ResponseField>
+
+<ResponseField name="data[].sms_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by SMS.
+</ResponseField>
+
+<ResponseField name="data[].metadata" type="object">
+  Your custom key-value pairs attached to this customer profile.
+</ResponseField>
+
+<ResponseField name="data[].created_at" type="string">
+  ISO 8601 timestamp of when this customer profile was created.
+</ResponseField>
+
+<ResponseField name="data[].updated_at" type="string">
+  ISO 8601 timestamp of the most recent update to this customer profile.
+</ResponseField>
+
+<ResponseField name="meta.total" type="integer">
+  Total number of customer profiles matching your filters across all pages.
+</ResponseField>
+
+<ResponseField name="meta.page" type="integer">
+  The current page number returned.
+</ResponseField>
+
+<ResponseField name="meta.per_page" type="integer">
+  The number of results per page used for this response.
+</ResponseField>
+
+<ResponseField name="meta.total_pages" type="integer">
+  The total number of pages available at the current `per_page` setting.
+</ResponseField>
 
 <Tip>
   To find a specific customer when you only know their email or phone number, use the `email` or `phone` query parameter instead of iterating through pages. These filters perform an exact match and return results instantly.

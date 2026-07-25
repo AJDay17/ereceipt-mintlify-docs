@@ -1,7 +1,7 @@
 ---
 title: "Track Receipt Performance with E-Receipt Analytics"
 sidebarTitle: "Analytics"
-description: "Use E-Receipt analytics to monitor delivery rates, open rates, and customer engagement across all your digital receipts."
+description: "Use E-Receipt analytics to monitor delivery rates, open rates, and customer engagement trends across all your digital receipt sends."
 ---
 
 Understanding how your receipts perform after they leave your system is just as important as creating and sending them. E-Receipt analytics give you visibility into every stage of the delivery journey — from the moment a receipt is queued to the moment a customer opens it. Use this data to identify delivery problems before they affect customers, measure engagement across channels, and continuously improve the quality of your receipt program.
@@ -74,7 +74,7 @@ The following fields are available on each receipt object and reflect the delive
 Retrieve these fields via the API:
 
 ```bash
-GET /v1/receipts/rcp_x7k2mn9p
+GET https://api.e-receipt.com/v1/receipts/rcp_x7k2mn9p
 Authorization: Bearer YOUR_API_KEY
 ```
 
@@ -102,7 +102,7 @@ Navigate to **Receipts**, apply any filters you need (date range, channel, deliv
 Use the `from` and `to` query parameters to retrieve receipts within a specific date range. Results are paginated — use `limit` and `starting_after` to iterate through all pages.
 
 ```bash
-GET /v1/receipts?from=2025-01-01&to=2025-01-31&limit=100
+GET https://api.e-receipt.com/v1/receipts?from=2025-01-01&to=2025-01-31&limit=100
 Authorization: Bearer YOUR_API_KEY
 ```
 

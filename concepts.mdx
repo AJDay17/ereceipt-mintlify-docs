@@ -15,7 +15,9 @@ Every receipt moves through a defined lifecycle captured in its `status` field:
 | Status | Meaning |
 |---|---|
 | `draft` | The receipt has been created but not yet sent. You can still edit it. |
+| `queued` | The send request has been accepted and the receipt is waiting to be dispatched. |
 | `sent` | The receipt has been dispatched to the delivery channel and is on its way to the customer. |
+| `delivered` | The delivery provider has confirmed the receipt reached the customer's inbox or device. |
 | `viewed` | The customer has opened the receipt link. |
 | `failed` | Delivery was attempted but failed — for example, due to an invalid email address. |
 
@@ -56,5 +58,5 @@ You configure webhook endpoints from **Settings > Webhooks** in the dashboard or
 When you create a receipt, E-Receipt links it to a Customer and applies your Template, then delivers it via the configured channel. In practical terms: your `POST /v1/receipts` request provides the `merchant_id`, `customer_id`, and line items; E-Receipt resolves your merchant's default (or specified) template; and your subsequent `POST /v1/receipts/{id}/send` call dispatches it through the customer's preferred or specified delivery channel. Webhooks fire at each status transition so your system stays in sync.
 
 <Info>
-  The receipt lifecycle always flows in one direction: `draft` → `sent` → `viewed` (or `failed`). You can edit a receipt while it is in `draft` status, but once you call `/send` the receipt is locked and a new version must be created if changes are needed. If a receipt reaches `failed` status, you can retry delivery by calling `/send` again after correcting the underlying issue (for example, updating the customer's email address).
+  The receipt lifecycle always flows in one direction: `draft` → `queued` → `sent` → `delivered` → `viewed` (or `failed`). You can edit a receipt while it is in `draft` status, but once you call `/send` the receipt is locked and a new version must be created if changes are needed. If a receipt reaches `failed` status, you can retry delivery by calling `/send` again after correcting the underlying issue (for example, updating the customer's email address).
 </Info>

@@ -1,7 +1,7 @@
 ---
-title: "Manage Customer Profiles and Purchase History"
+title: "Manage E-Receipt Customer Profiles and Purchase History"
 sidebarTitle: "Manage Customers"
-description: "Create and manage customer profiles in E-Receipt to track purchase history, delivery preferences, and contact details."
+description: "Create and manage customer profiles in E-Receipt to store contact details, track purchase history, and configure delivery preferences."
 ---
 
 Customer profiles are the foundation of personalized receipt delivery in E-Receipt. Every receipt you create is linked to a customer record, which stores their contact details, delivery preferences, and full purchase history. By maintaining accurate customer profiles, you can ensure receipts reach the right person on the right channel, give customers a complete record of their transactions, and respect their communication preferences at all times.
@@ -27,7 +27,7 @@ You can add customers one at a time through the dashboard, create them programma
 **Via the API:**
 
 ```bash
-POST /v1/customers
+POST https://api.e-receipt.com/v1/customers
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
@@ -68,7 +68,7 @@ Use the search bar at the top of the **Customers** page to search by name or ema
 Look up a customer by email address using the `email` query parameter:
 
 ```bash
-GET /v1/customers?email=jane@example.com
+GET https://api.e-receipt.com/v1/customers?email=jane@example.com
 Authorization: Bearer YOUR_API_KEY
 ```
 
@@ -88,7 +88,7 @@ Authorization: Bearer YOUR_API_KEY
 To update a customer's details, send a `PATCH` request with only the fields you want to change:
 
 ```bash
-PATCH /v1/customers/cus_abc123
+PATCH https://api.e-receipt.com/v1/customers/cus_abc123
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
@@ -117,7 +117,7 @@ Each customer record stores their preferred delivery channel and opt-in status f
 - **Email:** Every email receipt includes a one-click unsubscribe link in the footer. When a customer clicks it, E-Receipt automatically sets `email_opted_in` to `false` and no further email receipts will be sent to that address.
 - **SMS:** Customers can reply **STOP** to any SMS receipt. E-Receipt processes the STOP reply automatically and sets `sms_opted_in` to `false`. Customers can re-enable SMS receipts by replying **START**.
 
-You can also update opt-in status manually via `PATCH /v1/customers/{id}` if a customer contacts you directly to change their preferences.
+You can also update opt-in status manually via `PATCH https://api.e-receipt.com/v1/customers/{id}` if a customer contacts you directly to change their preferences.
 
 ## Viewing purchase history
 
@@ -132,7 +132,7 @@ Navigate to **Customers**, click the customer's name, and select the **Receipts*
 Retrieve all receipts for a specific customer using the `customer_id` query parameter:
 
 ```bash
-GET /v1/receipts?customer_id=cus_abc123
+GET https://api.e-receipt.com/v1/receipts?customer_id=cus_abc123
 Authorization: Bearer YOUR_API_KEY
 ```
 
@@ -188,5 +188,5 @@ To add many customers at once, upload a CSV file from the dashboard.
 </Note>
 
 <Warning>
-  Customer data stored in E-Receipt is subject to privacy regulations including **GDPR** (European Union) and **CCPA** (California, United States). If a customer submits a right-to-erasure or deletion request, you must delete their profile and all associated personal data. Use `DELETE /v1/customers/{id}` to permanently remove a customer record, including their contact details and delivery preferences. Note that receipt records may need to be retained separately for tax and accounting compliance — consult your legal counsel for guidance specific to your jurisdiction.
+  Customer data stored in E-Receipt is subject to privacy regulations including **GDPR** (European Union) and **CCPA** (California, United States). If a customer submits a right-to-erasure or deletion request, you must delete their profile and all associated personal data. Use `DELETE https://api.e-receipt.com/v1/customers/{id}` to permanently remove a customer record, including their contact details and delivery preferences. Note that receipt records may need to be retained separately for tax and accounting compliance — consult your legal counsel for guidance specific to your jurisdiction.
 </Warning>

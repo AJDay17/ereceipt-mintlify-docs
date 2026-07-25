@@ -10,7 +10,7 @@ Webhooks let your server receive real-time HTTP notifications whenever E-Receipt
 
 Send a `POST` request to create a new webhook endpoint and begin receiving events.
 
-```
+```http
 POST https://api.e-receipt.com/v1/webhooks
 ```
 
@@ -68,7 +68,7 @@ curl -X POST https://api.e-receipt.com/v1/webhooks \
 
 Retrieve all webhook endpoints registered on your account.
 
-```
+```http
 GET https://api.e-receipt.com/v1/webhooks
 ```
 
@@ -112,7 +112,7 @@ The response is an array of webhook objects. Note that `signing_secret` is **not
 
 Remove a registered webhook endpoint. E-Receipt will immediately stop delivering events to the associated URL.
 
-```
+```http
 DELETE https://api.e-receipt.com/v1/webhooks/{id}
 ```
 

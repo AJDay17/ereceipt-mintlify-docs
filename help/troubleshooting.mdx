@@ -1,5 +1,5 @@
 ---
-title: "Troubleshoot Common E-Receipt Issues"
+title: "Troubleshoot E-Receipt: Delivery Failures and API Errors"
 sidebarTitle: "Troubleshooting"
 description: "Diagnose and fix the most common issues in E-Receipt: delivery failures, authentication errors, template rendering problems, and integration issues."
 ---
@@ -56,10 +56,10 @@ A `401` response means your API key is missing, malformed, or invalid.
 - Confirm your request includes an `Authorization` header with the `Bearer` scheme:
 
   ```http
-  Authorization: Bearer sk_live_YOUR_API_KEY
+  Authorization: Bearer erecp_live_YOUR_API_KEY
   ```
 
-- Verify the key is correct by copying it again from **Settings > API Keys**. Note that keys beginning with `sk_test_` only work against the sandbox environment; use `sk_live_` keys for production.
+- Verify the key is correct by copying it again from **Settings > API Keys**. Note that keys beginning with `erecp_test_` only work against the sandbox environment; use `erecp_live_` keys for production.
 
 - Ensure no extra whitespace or line breaks have been introduced when storing or interpolating the key.
 
@@ -73,7 +73,7 @@ Check the scope assigned to the key in **Settings > API Keys**. If the key was c
 
 ```bash
 curl https://api.e-receipt.com/v1/receipts \
-  -H "Authorization: Bearer sk_live_abc123xyz" \
+  -H "Authorization: Bearer erecp_live_abc123xyz" \
   -H "Content-Type: application/json"
 ```
 

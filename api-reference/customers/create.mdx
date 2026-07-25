@@ -1,14 +1,14 @@
 ---
-title: "POST /customers — Create a Customer Profile"
+title: "Create a New Customer Profile — POST /v1/customers"
 sidebarTitle: "Create Customer"
-description: "POST /v1/customers — Creates a new customer profile with name, email, and phone. Returns the customer object with generated ID."
+description: "Create a customer profile in E-Receipt with a name, email, and/or phone number. Returns the new customer object including the generated ID."
 ---
 
 Create a customer profile before sending receipts. The customer ID this endpoint returns is what links individual receipts to a real person — you will pass it as `customer_id` whenever you create a receipt. Every customer must have at least one contact method (email or phone) so receipts can actually be delivered.
 
 ## Endpoint
 
-```
+```http
 POST https://api.e-receipt.com/v1/customers
 ```
 
@@ -31,7 +31,7 @@ POST https://api.e-receipt.com/v1/customers
 </ParamField>
 
 <ParamField body="metadata" type="object">
-  A set of key-value pairs you can attach for your own internal reference (e.g., loyalty card numbers, CRM IDs). Keys and values must be strings. Maximum 20 keys.
+  A set of key-value pairs you can attach to this customer for your own tracking purposes (e.g., loyalty card numbers, CRM IDs). Keys and values must be strings. Maximum 20 keys.
 </ParamField>
 
 <Note>
@@ -60,7 +60,7 @@ curl -X POST https://api.e-receipt.com/v1/customers \
 
 A successful request returns HTTP `201 Created` with the newly created customer object.
 
-```json
+```json Response
 {
   "id": "cus_9KJ2mXpLqR",
   "name": "Jane Smith",
@@ -78,6 +78,48 @@ A successful request returns HTTP `201 Created` with the newly created customer 
 }
 ```
 
+## Response fields
+
+<ResponseField name="id" type="string">
+  Unique identifier for the new customer, prefixed with `cus_`. Store this value to reference the customer in future API calls.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The customer's full name as stored in E-Receipt.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The customer's email address. `null` if not provided at creation.
+</ResponseField>
+
+<ResponseField name="phone" type="string">
+  The customer's phone number in E.164 format. `null` if not provided at creation.
+</ResponseField>
+
+<ResponseField name="preferred_channel" type="string">
+  The default delivery channel for this customer — either `"email"` or `"sms"`.
+</ResponseField>
+
+<ResponseField name="email_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by email. Defaults to `true` when an email address is provided.
+</ResponseField>
+
+<ResponseField name="sms_opted_in" type="boolean">
+  Whether the customer has opted in to receive receipts by SMS. Defaults to `true` when a phone number is provided.
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  The key-value pairs you submitted at creation. Returns an empty object `{}` if none were provided.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when this customer profile was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update to this customer profile.
+</ResponseField>
+
 <Tip>
-  Store the returned `id` (e.g., `cus_9KJ2mXpLqR`) in your own database alongside your internal customer record. You will need it every time you create a receipt for this customer.
+  Store the returned `id` (e.g., `cus_9KJ2mXpLqR`) in your own systems alongside your customer record. You will need it every time you create a receipt for this customer.
 </Tip>

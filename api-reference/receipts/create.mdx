@@ -1,7 +1,7 @@
 ---
-title: "POST /receipts — Create a Digital Receipt"
+title: "Create a New Receipt with the E-Receipt Receipts API"
 sidebarTitle: "Create Receipt"
-description: "POST /v1/receipts — Creates a new digital receipt. Accepts customer ID, line items, totals, and optional template. Returns the receipt object."
+description: "Use the Create Receipt endpoint to generate a new digital receipt for a customer with line items, tax, discounts, and an optional template."
 ---
 
 Use this endpoint to create a new digital receipt for a customer. Every receipt starts in `draft` status after creation — it is not delivered until you explicitly call the [Send Receipt](/api-reference/receipts/send) endpoint. This two-step flow lets you review and adjust a receipt before it reaches the customer.
@@ -205,7 +205,7 @@ A successful request returns HTTP `201 Created` with the newly created receipt o
 </ResponseField>
 
 <ResponseField name="status" type="string">
-  Current lifecycle status of the receipt. Newly created receipts always start as `"draft"`.
+  Current lifecycle status of the receipt. Newly created receipts always start as `"draft"`. Possible values: `draft`, `queued`, `sent`, `delivered`, `viewed`, `failed`.
 </ResponseField>
 
 <ResponseField name="customer_id" type="string">
@@ -217,7 +217,7 @@ A successful request returns HTTP `201 Created` with the newly created receipt o
 </ResponseField>
 
 <ResponseField name="items" type="array">
-  Array of line item objects as submitted in the request body.
+  Array of line item objects as submitted in the request body. Each item contains `name`, `quantity`, `unit_price`, and `total`.
 </ResponseField>
 
 <ResponseField name="subtotal" type="number">

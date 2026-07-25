@@ -1,7 +1,7 @@
 ---
-title: "Customize Receipt Templates and Branding"
+title: "Customize E-Receipt Templates with Branding and Layouts"
 sidebarTitle: "Customize Receipts"
-description: "Personalize your E-Receipt digital receipts with your logo, brand colors, custom fields, and layout templates."
+description: "Personalize your E-Receipt digital receipts using custom logo, brand colors, reusable layout templates, and dynamic metadata fields."
 ---
 
 The receipt your customer receives is often the last touchpoint in a transaction, and it shapes how they remember your brand. A well-designed receipt that carries your logo, colors, and voice reinforces trust and professionalism — while a generic one is a missed opportunity. E-Receipt gives you full control over the visual identity and content structure of every receipt you send, from a simple logo swap to fully customized layouts with dynamic fields.
@@ -56,7 +56,7 @@ Templates define the layout and content structure of a receipt. You can create m
 
 ## Using a template via the API
 
-To apply a specific template when creating a receipt, include the `template_id` field in your `POST /v1/receipts` request body.
+To apply a specific template when creating a receipt, include the `template_id` field in your `POST https://api.e-receipt.com/v1/receipts` request body.
 
 ```json
 {
@@ -75,7 +75,7 @@ To apply a specific template when creating a receipt, include the `template_id` 
 To retrieve the list of all templates available on your account, including their IDs and names, call:
 
 ```bash
-GET /v1/templates
+GET https://api.e-receipt.com/v1/templates
 Authorization: Bearer YOUR_API_KEY
 ```
 

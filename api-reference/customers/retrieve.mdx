@@ -1,14 +1,14 @@
 ---
-title: "GET /customers/:id — Retrieve a Customer Profile"
+title: "Retrieve a Customer Profile by ID — GET /v1/customers/{id}"
 sidebarTitle: "Retrieve Customer"
-description: "GET /v1/customers/:id — Returns a single customer profile by ID, including contact details and delivery preferences."
+description: "Look up a single customer profile by their E-Receipt ID to verify contact details, opt-in status, and their preferred delivery channel."
 ---
 
 Look up any customer by their E-Receipt ID to verify their contact details, check opt-in status, and confirm their preferred delivery channel. This is useful before sending a receipt when you want to confirm the customer has a valid email or phone on record.
 
 ## Endpoint
 
-```
+```http
 GET https://api.e-receipt.com/v1/customers/{id}
 ```
 
@@ -78,7 +78,7 @@ A successful request returns HTTP `200 OK` with the full customer profile.
 </ResponseField>
 
 <ResponseField name="metadata" type="object">
-  Your key-value pairs attached to this customer profile for internal reference.
+  Your custom key-value pairs attached to this customer profile (for example, CRM IDs or loyalty numbers).
 </ResponseField>
 
 <ResponseField name="created_at" type="string">

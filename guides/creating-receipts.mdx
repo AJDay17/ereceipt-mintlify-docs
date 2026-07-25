@@ -1,7 +1,7 @@
 ---
-title: "Create Digital Receipts with E-Receipt"
+title: "Creating Digital Receipts with E-Receipt: Full Guide"
 sidebarTitle: "Create Receipts"
-description: "Step-by-step guide to creating digital receipts in E-Receipt, including line items, taxes, discounts, and receipt metadata."
+description: "Step-by-step guide to creating digital receipts via the E-Receipt dashboard or API, covering line items, taxes, discounts, and metadata."
 ---
 
 Receipts are the core object in E-Receipt. Every transaction your business records — whether in-store, online, or through a third-party point-of-sale system — is represented as a receipt that you can issue, customize, and deliver to your customers. You can create receipts directly from the E-Receipt dashboard for manual entry, or programmatically through the API to integrate with your existing checkout and POS workflows.
@@ -33,12 +33,12 @@ The dashboard provides a guided form for creating receipts without writing any c
 
 ## Creating a receipt via the API
 
-For automated workflows, use the `POST /v1/receipts` endpoint to create receipts programmatically. Include all line items, totals, and any metadata you want to attach for downstream reporting.
+For automated workflows, use the `POST https://api.e-receipt.com/v1/receipts` endpoint to create receipts programmatically. Include all line items, totals, and any metadata you want to attach for downstream reporting.
 
 **Request**
 
 ```bash
-POST /v1/receipts
+POST https://api.e-receipt.com/v1/receipts
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
@@ -131,5 +131,5 @@ Each entry in `tax_lines` requires a `name`, a `rate` (as a decimal), and the pr
 </Note>
 
 <Tip>
-  Use the `template_id` field to apply a custom branded template to any receipt at creation time. You can maintain separate templates for different locations, receipt types (e.g., refunds vs. purchases), or customer segments. Retrieve your available template IDs with `GET /v1/templates`. See [Customize Receipts](/guides/customizing-receipts) for full details.
+  Use the `template_id` field to apply a custom branded template to any receipt at creation time. You can maintain separate templates for different locations, receipt types (e.g., refunds vs. purchases), or customer segments. Retrieve your available template IDs with `GET https://api.e-receipt.com/v1/templates`. See [Customize Receipts](/guides/customizing-receipts) for full details.
 </Tip>

@@ -1,7 +1,7 @@
 ---
-title: "GET /receipts/:id — Retrieve a Receipt"
+title: "Retrieve a Single Receipt with the E-Receipt REST API"
 sidebarTitle: "Retrieve Receipt"
-description: "GET /v1/receipts/:id — Retrieves a single receipt by ID, including its delivery status, line items, and customer details."
+description: "Fetch the full state of a receipt by its unique ID, including line items, monetary totals, delivery status, and customer engagement timestamps."
 ---
 
 Retrieve the full current state of any receipt using its unique ID. The response includes the complete line item breakdown, all monetary totals, and detailed delivery tracking — including when the receipt was sent, delivered, and first viewed by the customer. Use this endpoint to power receipt detail views, audit trails, or delivery status checks.
@@ -20,10 +20,28 @@ GET https://api.e-receipt.com/v1/receipts/{id}
 
 ## Example request
 
+<CodeGroup>
+
 ```bash cURL
 curl https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY",
+  {
+    headers: {
+      "Authorization": "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const receipt = await response.json();
+console.log(receipt.delivery_status); // "viewed"
+```
+
+</CodeGroup>
 
 ## Response
 
@@ -76,7 +94,7 @@ A successful request returns HTTP `200 OK` with the full receipt object.
 </ResponseField>
 
 <ResponseField name="status" type="string">
-  High-level lifecycle status of the receipt. Mirrors `delivery_status` once the receipt has been sent.
+  High-level lifecycle status of the receipt. Mirrors `delivery_status` once the receipt has been sent. Possible values: `draft`, `queued`, `sent`, `delivered`, `viewed`, `failed`.
 </ResponseField>
 
 <ResponseField name="customer_id" type="string">
@@ -88,7 +106,25 @@ A successful request returns HTTP `200 OK` with the full receipt object.
 </ResponseField>
 
 <ResponseField name="items" type="array">
-  Array of line item objects included on this receipt. Each item contains `name`, `quantity`, `unit_price`, and `total`.
+  Array of line item objects included on this receipt.
+
+  <Expandable title="Item object fields">
+    <ResponseField name="name" type="string">
+      Display name of the product or service.
+    </ResponseField>
+
+    <ResponseField name="quantity" type="number">
+      Number of units purchased.
+    </ResponseField>
+
+    <ResponseField name="unit_price" type="number">
+      Price per single unit in the receipt's currency.
+    </ResponseField>
+
+    <ResponseField name="total" type="number">
+      Total for this line item (`quantity × unit_price`).
+    </ResponseField>
+  </Expandable>
 </ResponseField>
 
 <ResponseField name="subtotal" type="number">
@@ -124,7 +160,6 @@ A successful request returns HTTP `200 OK` with the full receipt object.
 
   | Value | Description |
   |-------|-------------|
-  | `draft` | Receipt created but not yet sent. |
   | `queued` | Send request accepted and queued for delivery. |
   | `sent` | Receipt dispatched to the delivery provider. |
   | `delivered` | Confirmed delivery to the customer's inbox or phone. |

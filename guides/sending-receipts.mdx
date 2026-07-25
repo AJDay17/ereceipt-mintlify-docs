@@ -1,7 +1,7 @@
 ---
-title: "Send Digital Receipts to Customers via Email or SMS"
+title: "Deliver E-Receipt Digital Receipts by Email or SMS"
 sidebarTitle: "Send Receipts"
-description: "Learn how to deliver E-Receipt digital receipts to customers by email or SMS, schedule sends, and handle delivery failures."
+description: "How to deliver E-Receipt digital receipts to customers via email or SMS, including scheduling sends and handling delivery failures."
 ---
 
 E-Receipt delivers digital receipts to your customers through two channels: email and SMS. Email sends a fully branded HTML receipt directly to the customer's inbox, while SMS delivers a short message with a link to an online receipt viewer. You choose the channel at send time, or let the customer's saved delivery preference decide automatically. Both channels support immediate sending, scheduled delivery, and full delivery status tracking.
@@ -29,7 +29,7 @@ Once a receipt is in draft status, you can send it with a single action from the
 Send a `POST` request to the send endpoint, specifying the delivery channel in the request body.
 
 ```bash
-POST /v1/receipts/{id}/send
+POST https://api.e-receipt.com/v1/receipts/{id}/send
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
@@ -102,7 +102,7 @@ The `delivery_status` of `"queued"` confirms that the receipt has been accepted 
 To deliver a receipt at a future date and time, add the `send_at` field to your send request. The value must be an ISO 8601 UTC timestamp.
 
 ```bash
-POST /v1/receipts/{id}/send
+POST https://api.e-receipt.com/v1/receipts/{id}/send
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```
@@ -114,7 +114,7 @@ Content-Type: application/json
 }
 ```
 
-The response will include `"delivery_status": "scheduled"` and a `scheduled_for` timestamp confirming the queued send time. You can cancel a scheduled send by calling `DELETE /v1/receipts/{id}/send` before the scheduled time.
+The response will include `"delivery_status": "scheduled"` and a `scheduled_for` timestamp confirming the queued send time. You can cancel a scheduled send by calling `DELETE https://api.e-receipt.com/v1/receipts/{id}/send` before the scheduled time.
 
 ## Delivery status tracking
 
@@ -128,10 +128,10 @@ E-Receipt tracks each receipt through the full delivery lifecycle. The `delivery
 | `viewed` | The customer opened the email or clicked the SMS receipt link. |
 | `failed` | Delivery could not be completed. Check the `failure_reason` field for details. |
 
-To check the current delivery status of a receipt, call `GET /v1/receipts/{id}` and read the `delivery_status` field:
+To check the current delivery status of a receipt, call `GET https://api.e-receipt.com/v1/receipts/{id}` and read the `delivery_status` field:
 
 ```bash
-GET /v1/receipts/rcp_x7k2mn9p
+GET https://api.e-receipt.com/v1/receipts/rcp_x7k2mn9p
 Authorization: Bearer YOUR_API_KEY
 ```
 
@@ -158,7 +158,7 @@ When a delivery attempt fails, E-Receipt sets `delivery_status` to `"failed"` an
 **Retrying a failed receipt:**
 
 - **Dashboard:** Open the receipt, review the failure reason displayed in the delivery status banner, correct the customer's contact details if needed, and click **Resend**.
-- **API:** Fix the customer's contact information via `PATCH /v1/customers/{id}`, then call `POST /v1/receipts/{id}/send` again with the desired channel.
+- **API:** Fix the customer's contact information via `PATCH https://api.e-receipt.com/v1/customers/{id}`, then call `POST https://api.e-receipt.com/v1/receipts/{id}/send` again with the desired channel.
 
 <Warning>
   SMS delivery is subject to **opt-in compliance requirements** under regulations including TCPA (United States), CASL (Canada), and GDPR (European Union). You must obtain explicit, documented consent from customers before sending them SMS receipts. E-Receipt blocks SMS sends to any customer whose `sms_opted_in` flag is `false`, but it is your responsibility to collect and record consent through a compliant mechanism before setting that flag to `true`. Failure to comply with applicable regulations may result in significant legal penalties.

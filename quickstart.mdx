@@ -13,10 +13,12 @@ By the end of this guide you'll have a live E-Receipt account, a working API key
   <Step title="Get your API key">
     On the **API Keys** page, click **Create new key**, give it a descriptive name (for example, `my-first-integration`), and click **Generate**. Copy the key immediately — for security reasons it is only shown once. Store it somewhere safe, such as an environment variable or a secrets manager.
 
-    You'll use this key in the `Authorization` header of every API request:
+    E-Receipt issues two types of keys: `erecp_live_...` keys hit the production API, and `erecp_test_...` keys hit the sandbox at `https://sandbox.api.e-receipt.com/v1` — no real emails or SMS messages are sent in sandbox mode. Use a test key while following this guide.
 
-    ```
-    Authorization: Bearer YOUR_API_KEY
+    You'll use your key in the `Authorization` header of every API request:
+
+    ```http
+    Authorization: Bearer erecp_test_xxxxxxxxxxxx
     ```
 
     Your **Merchant ID** is also displayed on this page — keep it handy, as you'll need it when creating receipts.

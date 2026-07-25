@@ -1,7 +1,7 @@
 ---
-title: "Receive Real-Time Events with E-Receipt Webhooks"
+title: "E-Receipt Webhooks: Receive Real-Time Event Updates"
 sidebarTitle: "Webhooks"
-description: "Configure E-Receipt webhooks to receive real-time HTTP notifications when receipts are sent, delivered, viewed, or fail delivery."
+description: "Configure E-Receipt webhooks to receive real-time HTTP notifications when receipts are sent, delivered, viewed, or fail to deliver."
 ---
 
 Unlike polling, which requires your systems to repeatedly ask E-Receipt for updates, webhooks push event data to your server the moment something happens. When a receipt is sent, successfully delivered, opened by a customer, or encounters a delivery failure, E-Receipt immediately sends an HTTP POST request to your registered endpoint — giving you real-time visibility and the ability to trigger downstream actions without any delay.
@@ -100,7 +100,9 @@ Below is an example payload for the `receipt.viewed` event, which fires when a c
 | `receipt.sent` | E-Receipt dispatches the receipt to the delivery provider |
 | `receipt.delivered` | The delivery provider confirms successful delivery |
 | `receipt.viewed` | The customer opens the receipt |
-| `receipt.delivery_failed` | Delivery fails after all retry attempts are exhausted |
+| `receipt.failed` | Delivery fails after all retry attempts are exhausted |
+| `customer.created` | A new customer record is created in E-Receipt |
+| `customer.unsubscribed` | A customer opts out of receipt delivery |
 
 For the complete event catalog including all fields for each event type, see the [Webhook Events reference](/api-reference/webhooks/events).
 

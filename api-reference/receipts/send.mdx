@@ -1,7 +1,7 @@
 ---
-title: "POST /receipts/:id/send — Send a Receipt"
+title: "Send a Digital Receipt to a Customer — E-Receipt API"
 sidebarTitle: "Send Receipt"
-description: "POST /v1/receipts/:id/send — Delivers a receipt to the customer via email or SMS. Accepts channel and optional scheduled send time."
+description: "Deliver a draft receipt to its customer via email or SMS. Supports immediate and scheduled delivery with optional contact address overrides."
 ---
 
 Triggering this endpoint delivers a receipt to its customer over your chosen channel. The receipt must already exist and be in `draft` status — receipts that have already been sent cannot be sent again through this endpoint. You can send immediately or schedule delivery for a future time using the `send_at` parameter. Once accepted, the receipt's `delivery_status` moves to `queued`.
@@ -42,6 +42,8 @@ POST https://api.e-receipt.com/v1/receipts/{id}/send
 
 ## Example request
 
+<CodeGroup>
+
 ```bash cURL
 curl -X POST https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY/send \
   -H "Authorization: Bearer YOUR_API_KEY" \
@@ -51,6 +53,28 @@ curl -X POST https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY/send \
     "send_at": "2025-03-15T18:00:00Z"
   }'
 ```
+
+```javascript JavaScript
+const response = await fetch(
+  "https://api.e-receipt.com/v1/receipts/rec_7Xk3nPwQvY/send",
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      channel: "email",
+      send_at: "2025-03-15T18:00:00Z",
+    }),
+  }
+);
+
+const result = await response.json();
+console.log(result.delivery_status); // "queued"
+```
+
+</CodeGroup>
 
 ## Response
 
@@ -64,6 +88,24 @@ A successful request returns HTTP `200 OK` confirming the receipt has been queue
   "queued_at": "2025-03-15T14:00:00Z"
 }
 ```
+
+## Response fields
+
+<ResponseField name="receipt_id" type="string">
+  The ID of the receipt that was queued for delivery.
+</ResponseField>
+
+<ResponseField name="delivery_status" type="string">
+  Current delivery status of the receipt. Always `"queued"` immediately after a successful send request.
+</ResponseField>
+
+<ResponseField name="channel" type="string">
+  The delivery channel used for this send — either `"email"` or `"sms"`.
+</ResponseField>
+
+<ResponseField name="queued_at" type="string">
+  ISO 8601 timestamp of when the receipt was accepted into the delivery queue.
+</ResponseField>
 
 <Note>
   Poll [GET /v1/receipts/{id}](/api-reference/receipts/retrieve) to track the `delivery_status` as it progresses from `queued` → `sent` → `delivered` → `viewed`.

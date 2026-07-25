@@ -1,5 +1,5 @@
 ---
-title: "E-Receipt REST API Reference Overview"
+title: "E-Receipt REST API Overview: Base URL and Request Format"
 sidebarTitle: "Overview"
 description: "The E-Receipt REST API lets you create receipts, manage customers, and trigger deliveries programmatically. Base URL, versioning, and request format."
 ---
@@ -10,7 +10,7 @@ The E-Receipt REST API gives you full programmatic control over receipt creation
 
 All API requests go to the following base URL:
 
-```
+```text
 https://api.e-receipt.com/v1
 ```
 
@@ -24,7 +24,7 @@ The current API version is `v1`, and it is embedded directly in the URL path. Wh
 
 Send all request bodies as JSON and include the appropriate content type header:
 
-```
+```text
 Content-Type: application/json
 ```
 
@@ -76,7 +76,7 @@ Endpoints that return collections of resources are paginated. The response envel
 
 Control which page you receive using query parameters:
 
-```
+```text
 GET /v1/receipts?page=2&per_page=50
 ```
 
@@ -86,7 +86,7 @@ The default page size is `20`. The maximum allowed value for `per_page` is `100`
 
 The API enforces a limit of **100 requests per minute** per API key. Every response includes the `X-RateLimit-Remaining` header so you can track how many requests you have left in the current window:
 
-```
+```text
 X-RateLimit-Remaining: 84
 ```
 
@@ -96,7 +96,7 @@ If you exceed the limit, the API returns a `429 Too Many Requests` response. Imp
 
 E-Receipt provides a fully isolated sandbox environment for testing your integration without sending real receipts to real customers:
 
-```
+```text
 https://sandbox.api.e-receipt.com/v1
 ```
 

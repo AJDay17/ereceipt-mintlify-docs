@@ -1,7 +1,7 @@
 ---
-title: "E-Receipt API Error Codes and Troubleshooting"
+title: "E-Receipt API Error Codes, Status Codes, and Troubleshooting"
 sidebarTitle: "Errors"
-description: "Reference for all E-Receipt API error codes, HTTP status codes, and how to handle common errors in your integration."
+description: "A complete reference for E-Receipt API error codes and HTTP status codes, with code examples for handling failures in your integration."
 ---
 
 When a request to the E-Receipt API fails, the response body contains a structured error object that tells you exactly what went wrong and, where relevant, which request parameter caused the problem. Building robust error handling around this format helps your integration recover gracefully and surface actionable messages to your users.
@@ -145,7 +145,7 @@ def create_receipt(payload):
 
 When you receive a `429 Too Many Requests` response, pause before retrying. Use exponential backoff — increasing the delay with each successive retry — to avoid hammering the API and prolonging the wait.
 
-```javascript JavaScript
+```javascript
 async function fetchWithBackoff(url, options, maxRetries = 4) {
   let attempt = 0;
 
